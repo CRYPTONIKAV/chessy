@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Chess Training Platform",
+  title: "Chessy",
   description: "Fast, minimalist chess training focused on correct thinking through immediate correction and principled feedback.",
 };
 

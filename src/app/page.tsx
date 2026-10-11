@@ -47,7 +47,7 @@ export default function Home() {
         {/* Header */}
         <div className="mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
           <h1 className="text-6xl md:text-8xl font-bold tracking-tighter mb-4">
-            <span className="text-gradient drop-shadow-2xl">Gala Chess</span>
+            <span className="text-gradient drop-shadow-2xl">Chessy</span>
           </h1>
           <p className="text-xl md:text-2xl text-text-secondary font-light tracking-wide">
             Master the board, one move at a time.

@@ -79,13 +79,13 @@ function PlayContent() {
 
     // Compute arrows: only show the best move suggested by the engine
     const arrows: Arrow[] = useMemo(() => {
-        if (!mounted || !evaluation || !evaluation.bestMove) return [];
+        if (!mounted || silentMode || !evaluation || !evaluation.bestMove) return [];
         const bestMove = evaluation.bestMove;
         const from = bestMove.slice(0, 2);
         const to = bestMove.slice(2, 4);
         const bestMoveArrow = createBestMoveArrow(from, to, difficulty);
         return bestMoveArrow ? [bestMoveArrow] : [];
-    }, [evaluation, difficulty, mounted]);
+    }, [evaluation, difficulty, mounted, silentMode]);
 
     // Initialize Engine
     useChessEngine();
@@ -237,6 +237,17 @@ function PlayContent() {
     const showEvalBarSetting = useGameStore((state) => state.showEvalBar);
     const showEvalBar = (difficulty !== 'silent' && !silentMode) &&
         ((difficulty === 'intermediate' && showEvalBarSetting) || difficulty === 'beginner'); // Hidden for Advanced
+    // Only Beginner gets the best move suggested (arrow and sidebar)
+    const showBestMoveHint = difficulty === 'beginner' && !silentMode;
+
+    // The on-board grade badge follows the same rules as the sidebar feedback:
+    // Beginner/Intermediate see each grade immediately, Advanced only sees the
+    // grade of their previous move once the engine has replied, and Master,
+    // Silent and the Silent Mode toggle show nothing during play.
+    const overlayAnalysis = silentMode ? null
+        : (difficulty === 'beginner' || difficulty === 'intermediate') ? lastMoveAnalysis
+        : difficulty === 'advanced' ? (effectiveMoveAnalysis ?? null)
+        : null;
 
 
     // Keyboard Shortcuts Logic
@@ -298,7 +309,7 @@ function PlayContent() {
                         <div className="w-full max-w-[min(80vh,100%)] glass p-2 rounded-lg shadow-2xl relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
                             <div className="relative">
-                                <MoveFeedbackOverlay />
+                                <MoveFeedbackOverlay analysis={overlayAnalysis} />
                                 <ChessBoard
                                     fen={displayFen}
                                     onPieceDrop={onDrop}
@@ -458,8 +469,8 @@ function PlayContent() {
                         )}
                     </div>
 
-                    {/* Analysis Info */}
-                    {evaluation && (
+                    {/* Analysis Info: only on levels that show the evaluation */}
+                    {evaluation && showEvalBar && (
                         <div className="mt-4 p-4 bg-black/40 backdrop-blur-md rounded-xl text-xs font-mono border border-white/10 shadow-lg group hover:border-primary/30 transition-colors">
                             <div className="flex justify-between mb-2">
                                 <span className="opacity-60">Evaluation</span>
@@ -467,10 +478,12 @@ function PlayContent() {
                                     {evaluation.mate ? `M${Math.abs(evaluation.mate)} ` : (evaluation.evaluation / 100).toFixed(2)}
                                 </span>
                             </div>
-                            <div className="flex justify-between mb-2">
-                                <span className="opacity-60">Best Move</span>
-                                <span className="text-secondary font-bold">{evaluation.bestMove}</span>
-                            </div>
+                            {showBestMoveHint && (
+                                <div className="flex justify-between mb-2">
+                                    <span className="opacity-60">Best Move</span>
+                                    <span className="text-secondary font-bold">{evaluation.bestMove}</span>
+                                </div>
+                            )}
                             <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
                                 <div className="bg-primary h-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, (evaluation.depth / 20) * 100))}% ` }}></div>
                             </div>

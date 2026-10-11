@@ -106,7 +106,7 @@ export interface GameState {
     currentOpening: string | null; // Current detected opening
 
     // Redo stack for redo functionality
-    redoStack: { uci: string; san: string; fen: string; evaluation: EngineEvaluation | null }[];
+    redoStack: MoveHistory[];
 }
 
 export interface GameActions {

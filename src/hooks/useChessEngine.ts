@@ -32,12 +32,7 @@ export function useChessEngine() {
     // Effect to update engine options when difficulty changes
     useEffect(() => {
         if (!engineService) return;
-        let config = LEVELS[difficulty];
-        // Force strongest engine for silent and master
-        if (difficulty === 'silent' || difficulty === 'master') {
-            config = { ...config, skillLevel: 20, depth: 25, multiPV: 1 };
-        }
-        engineService.setOption('Skill Level', config.skillLevel);
+        engineService.setOption('Skill Level', LEVELS[difficulty].skillLevel);
     }, [difficulty]);
 
     // Main Engine Loop
@@ -47,14 +42,10 @@ export function useChessEngine() {
         console.log('[useChessEngine] Position changed:', { fen, turn, gameMode, orientation });
 
         const handleEngineWork = async () => {
-            let config = LEVELS[difficulty];
-            // Force strongest engine for silent and master
-            if (difficulty === 'silent' || difficulty === 'master') {
-                config = { ...config, skillLevel: 20, depth: 25, multiPV: 1 };
-            }
+            const config = LEVELS[difficulty];
 
             setAnalyzing(true);
-            const evaluation = await engineService!.evaluate(fen, config.depth, config.multiPV);
+            const evaluation = await engineService!.evaluate(fen, config.depth, config.multiPV, config.moveTimeMs);
             setAnalysis(evaluation);
             setAnalyzing(false);
 

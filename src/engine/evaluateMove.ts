@@ -74,7 +74,12 @@ class StockfishEngine {
         this.sendCommand(`setoption name ${name} value ${value}`);
     }
 
-    public async evaluate(fen: string, depth = 15, multiPV = 1): Promise<EngineEvaluation> {
+    /**
+     * Search a position until `depth` is reached or `moveTimeMs` has elapsed,
+     * whichever comes first. The time cap keeps deep levels responsive: the
+     * bundled single-threaded Stockfish can take many seconds per extra ply.
+     */
+    public async evaluate(fen: string, depth = 15, multiPV = 1, moveTimeMs?: number): Promise<EngineEvaluation> {
         return new Promise((resolve) => {
             // Reset state
             this.currentEval = { depth: 0, lines: [] };
@@ -83,7 +88,7 @@ class StockfishEngine {
             this.sendCommand('stop'); // Stop any previous search
             this.sendCommand(`setoption name MultiPV value ${multiPV}`);
             this.sendCommand(`position fen ${fen}`);
-            this.sendCommand(`go depth ${depth}`);
+            this.sendCommand(moveTimeMs ? `go depth ${depth} movetime ${moveTimeMs}` : `go depth ${depth}`);
 
             this.onEvalCallback = (evaluation) => {
                 resolve(evaluation);

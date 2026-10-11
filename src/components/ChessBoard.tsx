@@ -14,6 +14,9 @@ interface ChessBoardComponentProps {
     onMouseOutSquare?: (square: string) => void;
     arrows?: Arrow[];
     disableAnimations?: boolean; // Accessibility: disables piece movement animation
+    // Which side's pieces the user may pick up: 'w' or 'b', null for none.
+    // Leave undefined to allow both (e.g. analysis boards).
+    movableColor?: 'w' | 'b' | null;
 }
 
 export default function ChessBoard({
@@ -25,6 +28,7 @@ export default function ChessBoard({
     onMouseOutSquare,
     arrows = [],
     disableAnimations = false,
+    movableColor,
 }: ChessBoardComponentProps) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [boardSize, setBoardSize] = useState(300);
@@ -63,16 +67,33 @@ export default function ChessBoard({
     const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
     const [clickStyles, setClickStyles] = useState<Record<string, React.CSSProperties>>({});
 
+    // pieceType looks like "wP" / "bN"; the first letter is the colour
+    const isMovablePiece = (pieceType: string | undefined) =>
+        !!pieceType && movableColor !== null && (movableColor === undefined || pieceType[0] === movableColor);
+
+    const selectSquare = (square: string) => {
+        setSelectedSquare(square);
+        setClickStyles({
+            [square]: {
+                boxShadow: '0 0 0 3px #ffd700',
+                background: 'rgba(255,255,0,0.2)',
+            },
+        });
+    };
+
+    // Clear any selection once moving is no longer allowed (e.g. engine's turn)
+    const [prevMovableColor, setPrevMovableColor] = useState(movableColor);
+    if (prevMovableColor !== movableColor) {
+        setPrevMovableColor(movableColor);
+        setSelectedSquare(null);
+        setClickStyles({});
+    }
+
     // Handle square click
-    const handleSquareClick = (square: string) => {
+    const handleSquareClick = (square: string, pieceType?: string) => {
         if (!selectedSquare) {
-            setSelectedSquare(square);
-            setClickStyles({
-                [square]: {
-                    boxShadow: '0 0 0 3px #ffd700',
-                    background: 'rgba(255,255,0,0.2)',
-                },
-            });
+            // Only pieces the user is allowed to move can be selected
+            if (isMovablePiece(pieceType)) selectSquare(square);
         } else if (selectedSquare === square) {
             setSelectedSquare(null);
             setClickStyles({});
@@ -81,6 +102,9 @@ export default function ChessBoard({
             if (onPieceDrop && onPieceDrop(selectedSquare, square)) {
                 setSelectedSquare(null);
                 setClickStyles({});
+            } else if (isMovablePiece(pieceType)) {
+                // Clicking another of your own pieces switches the selection
+                selectSquare(square);
             } else {
                 // Invalid move, keep selection
                 setClickStyles({
@@ -113,7 +137,9 @@ export default function ChessBoard({
                     squareStyles: mergedSquareStyles,
                     onMouseOverSquare: onMouseOverSquare ? ({ square }) => onMouseOverSquare(square) : undefined,
                     onMouseOutSquare: onMouseOutSquare ? ({ square }) => onMouseOutSquare(square) : undefined,
-                    onSquareClick: ({ square }) => handleSquareClick(square),
+                    onSquareClick: ({ square, piece }) => handleSquareClick(square, piece?.pieceType),
+                    allowDragging: movableColor !== null,
+                    canDragPiece: ({ piece }) => isMovablePiece(piece.pieceType),
                 }}
             />
             {/* Render arrows as SVG overlays */}

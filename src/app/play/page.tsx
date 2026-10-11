@@ -44,6 +44,7 @@ function PlayContent() {
         setCurrentMoveIndex,
         redoStack,
         orientation,
+        gameMode,
         setOrientation,
         currentOpening,
         setCurrentOpening
@@ -92,13 +93,21 @@ function PlayContent() {
     // Local UI State for highlighting
     const [optionSquares, setOptionSquares] = useState<Record<string, React.CSSProperties>>({});
 
+    // The user may only move their own pieces, on their turn, on the live position
+    const userColor = orientation === 'white' ? 'w' : 'b';
+    const isViewingHistory = currentMoveIndex !== -1 && currentMoveIndex !== history.length - 1;
+    const canUserMove = mounted && !result && !isViewingHistory &&
+        (gameMode !== 'pve' || game.turn() === userColor);
+
     const onDrop = useCallback((sourceSquare: string, targetSquare: string) => {
+        if (!canUserMove) return false;
         const success = makeMove(sourceSquare, targetSquare);
         if (success) setOptionSquares({});
         return success;
-    }, [makeMove]);
+    }, [makeMove, canUserMove]);
 
     const onMouseOverSquare = (square: string) => {
+        if (!canUserMove || game.get(square as Square)?.color !== game.turn()) return;
         const moves = game.moves({ square: square as Square, verbose: true });
         if (moves.length === 0) return;
 
@@ -298,6 +307,7 @@ function PlayContent() {
                                     onMouseOutSquare={onMouseOutSquare}
                                     arrows={arrows}
                                     boardOrientation={orientation}
+                                    movableColor={canUserMove ? game.turn() : null}
                                 />
                             </div>
                         </div>
@@ -468,6 +478,12 @@ function PlayContent() {
                                 <span>Depth</span>
                                 <span>{evaluation.depth}/20</span>
                             </div>
+                        </div>
+                    )}
+
+                    {isViewingHistory && !result && (
+                        <div className="mt-4 p-3 rounded-lg border border-white/10 bg-white/5 text-xs text-text-secondary">
+                            Viewing an earlier position. Press <span className="font-bold text-foreground">»</span> to return to the live game and move.
                         </div>
                     )}
 

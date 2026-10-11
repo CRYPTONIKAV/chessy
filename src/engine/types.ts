@@ -7,7 +7,8 @@ export type AnalysisLine = {
 };
 
 export type EngineEvaluation = {
-    bestMove: string;
+    bestMove: string; // strongest move found (first move of the main line)
+    engineMove?: string; // move the engine chose to play, weakened by Skill Level
     evaluation: number; // centipawns, from White's point of view
     depth: number;
     mate?: number; // moves to mate (positive = White mates)

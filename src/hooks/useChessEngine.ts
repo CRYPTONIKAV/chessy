@@ -35,7 +35,7 @@ export function useChessEngine() {
         let config = LEVELS[difficulty];
         // Force strongest engine for silent and master
         if (difficulty === 'silent' || difficulty === 'master') {
-            config = { ...config, skillLevel: 20, depth: 25, multiPV: 1, errorProbability: 0 };
+            config = { ...config, skillLevel: 20, depth: 25, multiPV: 1 };
         }
         engineService.setOption('Skill Level', config.skillLevel);
     }, [difficulty]);
@@ -50,7 +50,7 @@ export function useChessEngine() {
             let config = LEVELS[difficulty];
             // Force strongest engine for silent and master
             if (difficulty === 'silent' || difficulty === 'master') {
-                config = { ...config, skillLevel: 20, depth: 25, multiPV: 1, errorProbability: 0 };
+                config = { ...config, skillLevel: 20, depth: 25, multiPV: 1 };
             }
 
             setAnalyzing(true);
@@ -122,11 +122,13 @@ export function useChessEngine() {
             // 2. Make Computer Move if applicable
             if (gameMode === 'pve' && turn !== orientation.charAt(0) && !computerMovePending.current) {
                 console.log('[useChessEngine] Computer should play now');
-                const bestMove = evaluation.bestMove;
-                if (bestMove && bestMove.length >= 4) {
-                    const from = bestMove.substring(0, 2);
-                    const to = bestMove.substring(2, 4);
-                    const promotion = bestMove.substring(4, 5) || 'q';
+                // Play the move chosen under the level's Skill Level, not the
+                // strongest line, so lower levels actually play weaker.
+                const engineMove = evaluation.engineMove || evaluation.bestMove;
+                if (engineMove && engineMove.length >= 4) {
+                    const from = engineMove.substring(0, 2);
+                    const to = engineMove.substring(2, 4);
+                    const promotion = engineMove.substring(4, 5) || 'q';
 
                     computerMovePending.current = true;
                     console.log('[useChessEngine] Making computer move:', { from, to, promotion });

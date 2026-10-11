@@ -46,8 +46,13 @@ class StockfishEngine {
         if (line.startsWith('bestmove')) {
             if (this.onEvalCallback) {
                 const bestLine = this.currentEval.lines[0];
+                // "bestmove e2e3 ponder d7d5": this is the move the engine actually
+                // chooses, which "Skill Level" weakens. The PV's first move is the
+                // strongest move and is what we use for analysis.
+                const chosen = line.split(' ')[1];
                 const result: EngineEvaluation = {
                     bestMove: bestLine?.bestMove || '',
+                    engineMove: chosen && chosen !== '(none)' ? chosen : undefined,
                     evaluation: bestLine?.evaluation || 0,
                     mate: bestLine?.mate,
                     depth: this.currentEval.depth,

@@ -1,16 +1,16 @@
 export type AnalysisLine = {
     multipv: number;
     bestMove: string;
-    evaluation: number; // centipawns
-    mate?: number; // moves to mate
+    evaluation: number; // centipawns, from White's point of view
+    mate?: number; // moves to mate (positive = White mates)
     pv: string[]; // principal variation
 };
 
 export type EngineEvaluation = {
     bestMove: string;
-    evaluation: number; // centipawns
+    evaluation: number; // centipawns, from White's point of view
     depth: number;
-    mate?: number; // moves to mate
+    mate?: number; // moves to mate (positive = White mates)
     ponder?: string;
     lines: AnalysisLine[];
 };

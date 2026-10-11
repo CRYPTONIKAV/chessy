@@ -1,33 +1,24 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { engineService } from '../engine/evaluateMove';
 import { LEVELS } from '../store/types';
 import { analyzeMoveResult } from '../logic/classifyMove';
 import { detectTactics } from '../logic/tactics';
+import { generateExplanation } from '../logic/explanations';
 import { Square } from 'chess.js';
 
-export function useChessEngine() {
-    const {
-        game,
-        fen,
-        turn,
-        gameMode,
-        difficulty,
-        orientation,
-        isGameOver,
-        makeMove,
-        setAnalysis,
-        setAnalyzing,
-        isAnalyzing,
-        lastEvaluation,
-        history,
-        addMistake,
-        setLastMoveAnalysis,
-        setMoveEvaluation
-    } = useGameStore();
+// Short pause before analysing, so rapid position changes don't each start a search
+const ANALYSIS_DEBOUNCE_MS = 200;
+// Pause before the computer plays, so its reply doesn't feel instant
+const COMPUTER_MOVE_DELAY_MS = 500;
 
-    // Track if a computer move is pending to prevent duplicates
-    const computerMovePending = useRef(false);
+export function useChessEngine() {
+    const fen = useGameStore((s) => s.fen);
+    const turn = useGameStore((s) => s.turn);
+    const gameMode = useGameStore((s) => s.gameMode);
+    const difficulty = useGameStore((s) => s.difficulty);
+    const orientation = useGameStore((s) => s.orientation);
+    const isGameOver = useGameStore((s) => s.isGameOver);
 
     // Effect to update engine options when difficulty changes
     useEffect(() => {
@@ -35,29 +26,39 @@ export function useChessEngine() {
         engineService.setOption('Skill Level', LEVELS[difficulty].skillLevel);
     }, [difficulty]);
 
-    // Main Engine Loop
+    // Main Engine Loop: runs once per position. Every run owns its own search,
+    // and a run whose position is no longer current is discarded, so a new
+    // position always gets analysed (and answered) even if an older search
+    // was still in progress.
     useEffect(() => {
-        if (!engineService || isGameOver || isAnalyzing) return;
+        const engine = engineService;
+        if (!engine) return;
 
-        console.log('[useChessEngine] Position changed:', { fen, turn, gameMode, orientation });
+        const { setAnalyzing } = useGameStore.getState();
+        if (isGameOver) {
+            engine.stop();
+            setAnalyzing(false);
+            return;
+        }
+
+        let cancelled = false;
+        let computerMoveTimer: ReturnType<typeof setTimeout> | undefined;
 
         const handleEngineWork = async () => {
             const config = LEVELS[difficulty];
 
             setAnalyzing(true);
-            const evaluation = await engineService!.evaluate(fen, config.depth, config.multiPV, config.moveTimeMs);
-            setAnalysis(evaluation);
-            setAnalyzing(false);
+            const evaluation = await engine.evaluate(fen, config.depth, config.multiPV, config.moveTimeMs);
 
-            console.log('[useChessEngine] Evaluation complete:', {
-                bestMove: evaluation.bestMove,
-                shouldAutoPlay: gameMode === 'pve' && turn !== orientation.charAt(0),
-                turn,
-                orientation,
-                computerMovePending: computerMovePending.current
-            });
+            // Superseded by a newer search, or the position changed meanwhile
+            const state = useGameStore.getState();
+            if (cancelled || !evaluation || state.fen !== fen) return;
+
+            state.setAnalysis(evaluation);
+            state.setAnalyzing(false);
 
             // Analyze the move that just happened
+            const { lastEvaluation, history, game } = state;
             if (lastEvaluation && history.length > 0) {
                 const lastMoveIdx = history.length - 1;
                 const lastMove = history[lastMoveIdx];
@@ -74,9 +75,9 @@ export function useChessEngine() {
                     tacticalFlags
                 );
 
-                let explanation = undefined;
+                let explanation: string | undefined = undefined;
                 try {
-                    explanation = require('../logic/explanations').generateExplanation(
+                    explanation = generateExplanation(
                         analysis.evalDelta,
                         analysis.tacticalFlags,
                         game,
@@ -86,9 +87,11 @@ export function useChessEngine() {
                             piece: game.get(lastMove.uci.slice(0, 2) as Square)?.type || ''
                         }
                     ).summary;
-                } catch { }
+                } catch (e) {
+                    console.error('Error generating explanation:', e);
+                }
 
-                setMoveEvaluation(
+                state.setMoveEvaluation(
                     lastMoveIdx,
                     evaluation,
                     analysis,
@@ -96,10 +99,10 @@ export function useChessEngine() {
                     explanation
                 );
 
-                setLastMoveAnalysis(analysis);
+                state.setLastMoveAnalysis(analysis);
 
                 if (analysis.grade === 'mistake' || analysis.grade === 'blunder') {
-                    addMistake({
+                    state.addMistake({
                         fen: fen,
                         movePlayed: lastMove.uci,
                         betterMove: lastEvaluation.bestMove,
@@ -107,12 +110,11 @@ export function useChessEngine() {
                     });
                 }
             } else {
-                setLastMoveAnalysis(null);
+                state.setLastMoveAnalysis(null);
             }
 
-            // 2. Make Computer Move if applicable
-            if (gameMode === 'pve' && turn !== orientation.charAt(0) && !computerMovePending.current) {
-                console.log('[useChessEngine] Computer should play now');
+            // Make Computer Move if applicable
+            if (gameMode === 'pve' && turn !== orientation.charAt(0)) {
                 // Play the move chosen under the level's Skill Level, not the
                 // strongest line, so lower levels actually play weaker.
                 const engineMove = evaluation.engineMove || evaluation.bestMove;
@@ -121,30 +123,24 @@ export function useChessEngine() {
                     const to = engineMove.substring(2, 4);
                     const promotion = engineMove.substring(4, 5) || 'q';
 
-                    computerMovePending.current = true;
-                    console.log('[useChessEngine] Making computer move:', { from, to, promotion });
-
-                    setTimeout(() => {
-                        makeMove(from, to, promotion);
-                        computerMovePending.current = false;
-                    }, 500);
+                    computerMoveTimer = setTimeout(() => {
+                        // Only play if the position is still the one we searched
+                        if (useGameStore.getState().fen === fen) {
+                            useGameStore.getState().makeMove(from, to, promotion);
+                        }
+                    }, COMPUTER_MOVE_DELAY_MS);
                 }
             }
         };
 
         const timer = setTimeout(() => {
             handleEngineWork();
-        }, 200);
+        }, ANALYSIS_DEBOUNCE_MS);
 
-        return () => clearTimeout(timer);
-    }, [
-        fen,
-        turn,
-        gameMode,
-        difficulty,
-        orientation,
-        isGameOver,
-        // NOTE: Removed 'game', 'isAnalyzing', and action functions from dependencies
-        // to prevent infinite loops. Using fen and turn to track position changes.
-    ]);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+            clearTimeout(computerMoveTimer);
+        };
+    }, [fen, turn, gameMode, difficulty, orientation, isGameOver]);
 }

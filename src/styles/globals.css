@@ -1,44 +1,78 @@
 @import "tailwindcss";
 
 :root {
-  /* Core Colors - Dark Mode Default */
-  --background: #1a1a1a;
-  --bg-secondary: #242424;
-  --foreground: #e8e8e8;
-  --text-secondary: #a0a0a0;
+  /* Premium Dark Theme Palette */
+  --background: #030712; /* Very dark blue/gray */
+  --foreground: #f8fafc; /* Slate 50 */
   
-  --accent: #4a9eff;
-  --success: #44a06b;
-  --warning: #e8a83e;
-  --error: #d44d5c;
-
-  /* Font Stack */
-  --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --card: rgba(30, 41, 59, 0.7); /* Slate 800 with opacity */
+  --card-border: rgba(148, 163, 184, 0.1);
+  
+  --primary: #8b5cf6; /* Violet 500 */
+  --primary-hover: #7c3aed; /* Violet 600 */
+  --secondary: #06b6d4; /* Cyan 500 */
+  
+  --accent: #f472b6; /* Pink 400 */
+  
+  --gradient-bg: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #030712 100%);
+  
+  /* Fonts */
+  --font-main: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-bg-secondary: var(--bg-secondary);
   --color-foreground: var(--foreground);
-  --color-text-secondary: var(--text-secondary);
-  
+  --color-card: var(--card);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
   --color-accent: var(--accent);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-error: var(--error);
-
+  
   --font-sans: var(--font-main);
   --font-mono: var(--font-mono);
   
-  --transition-fast: 150ms ease;
-  --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-fade-in: fade-in 0.6s ease-out;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+  
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+  
+  @keyframes glow {
+    from { box-shadow: 0 0 10px var(--primary); }
+    to { box-shadow: 0 0 20px var(--secondary); }
+  }
 }
 
 body {
   background: var(--background);
+  background-image: var(--gradient-bg);
   color: var(--foreground);
   font-family: var(--font-main);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.text-gradient {
+  background: linear-gradient(to right, #c084fc, #6366f1, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

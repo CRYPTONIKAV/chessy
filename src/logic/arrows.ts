@@ -10,13 +10,13 @@ export interface Arrow {
 export function getArrowColorByLevel(level: string): string {
     switch (level) {
         case 'beginner':
-            return '#00c853'; // green
+            return 'rgba(68, 160, 107, 0.9)'; // success (green)
         case 'intermediate':
-            return '#2979ff'; // blue
+            return 'rgba(6, 182, 212, 0.9)'; // secondary (cyan)
         case 'advanced':
-            return '#ffb300'; // orange
+            return 'rgba(244, 114, 182, 0.9)'; // accent (pink)
         default:
-            return '#ff1744'; // red
+            return 'rgba(212, 77, 92, 0.9)'; // error (red)
     }
 }
 

@@ -1,8 +1,21 @@
 import { EngineEvaluation, AnalysisLine } from './types';
 
+interface SearchRequest {
+    fen: string;
+    depth: number;
+    multiPV: number;
+    moveTimeMs?: number;
+    cancelled: boolean;
+    resolve: (evaluation: EngineEvaluation | null) => void;
+}
+
 class StockfishEngine {
     private worker: Worker | null = null;
-    private onEvalCallback: ((evaluation: EngineEvaluation) => void) | null = null;
+    // Stockfish runs one search at a time. A new request never starts until the
+    // running search has sent its "bestmove", so output is never mixed between
+    // searches. Only the newest waiting request is kept.
+    private current: SearchRequest | null = null;
+    private pending: SearchRequest | null = null;
     private isReady = false;
     // Stockfish reports scores from the side to move's point of view.
     // We remember who is to move so scores can be converted to White's view.
@@ -44,7 +57,9 @@ class StockfishEngine {
         }
 
         if (line.startsWith('bestmove')) {
-            if (this.onEvalCallback) {
+            const finished = this.current;
+            this.current = null;
+            if (finished) {
                 const bestLine = this.currentEval.lines[0];
                 // "bestmove e2e3 ponder d7d5": this is the move the engine actually
                 // chooses, which "Skill Level" weakens. The PV's first move is the
@@ -58,8 +73,13 @@ class StockfishEngine {
                     depth: this.currentEval.depth,
                     lines: this.currentEval.lines
                 };
-                this.onEvalCallback(result);
-                this.onEvalCallback = null;
+                // A search stopped early for a newer request resolves with null
+                finished.resolve(finished.cancelled ? null : result);
+            }
+            if (this.pending) {
+                const next = this.pending;
+                this.pending = null;
+                this.start(next);
             }
         }
     }
@@ -78,22 +98,48 @@ class StockfishEngine {
      * Search a position until `depth` is reached or `moveTimeMs` has elapsed,
      * whichever comes first. The time cap keeps deep levels responsive: the
      * bundled single-threaded Stockfish can take many seconds per extra ply.
+     *
+     * If a search is already running it is stopped and this one runs next.
+     * Requests that get superseded resolve with `null`.
      */
-    public async evaluate(fen: string, depth = 15, multiPV = 1, moveTimeMs?: number): Promise<EngineEvaluation> {
+    public evaluate(fen: string, depth = 15, multiPV = 1, moveTimeMs?: number): Promise<EngineEvaluation | null> {
         return new Promise((resolve) => {
-            // Reset state
-            this.currentEval = { depth: 0, lines: [] };
-            this.sideToMove = fen.split(' ')[1] === 'b' ? 'b' : 'w';
+            const request: SearchRequest = { fen, depth, multiPV, moveTimeMs, cancelled: false, resolve };
 
-            this.sendCommand('stop'); // Stop any previous search
-            this.sendCommand(`setoption name MultiPV value ${multiPV}`);
-            this.sendCommand(`position fen ${fen}`);
-            this.sendCommand(moveTimeMs ? `go depth ${depth} movetime ${moveTimeMs}` : `go depth ${depth}`);
+            if (!this.current) {
+                this.start(request);
+                return;
+            }
 
-            this.onEvalCallback = (evaluation) => {
-                resolve(evaluation);
-            };
+            this.pending?.resolve(null);
+            this.pending = request;
+            if (!this.current.cancelled) {
+                this.current.cancelled = true;
+                this.sendCommand('stop');
+            }
         });
+    }
+
+    /** Stop any running search and drop the queued one. */
+    public stop() {
+        this.pending?.resolve(null);
+        this.pending = null;
+        if (this.current && !this.current.cancelled) {
+            this.current.cancelled = true;
+            this.sendCommand('stop');
+        }
+    }
+
+    private start(request: SearchRequest) {
+        this.current = request;
+        this.currentEval = { depth: 0, lines: [] };
+        this.sideToMove = request.fen.split(' ')[1] === 'b' ? 'b' : 'w';
+
+        this.sendCommand(`setoption name MultiPV value ${request.multiPV}`);
+        this.sendCommand(`position fen ${request.fen}`);
+        this.sendCommand(request.moveTimeMs
+            ? `go depth ${request.depth} movetime ${request.moveTimeMs}`
+            : `go depth ${request.depth}`);
     }
 
     private parseInfoLine(line: string): AnalysisLine | null {

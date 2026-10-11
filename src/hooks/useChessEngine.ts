@@ -57,12 +57,18 @@ export function useChessEngine() {
             state.setAnalysis(evaluation);
             state.setAnalyzing(false);
 
-            // Analyze the move that just happened
+            // Analyze the move that just happened. Only the player's own moves
+            // are graded; against the engine, the engine's replies just get
+            // their evaluation stored (for review/PGN) and leave the player's
+            // latest feedback in place.
             const { lastEvaluation, history, game } = state;
-            if (lastEvaluation && history.length > 0) {
-                const lastMoveIdx = history.length - 1;
+            const lastMoveIdx = history.length - 1;
+            const moveColor = turn === 'w' ? 'b' : 'w';
+            const isPlayerMove = gameMode !== 'pve' || moveColor === orientation.charAt(0);
+            if (history.length > 0 && !isPlayerMove) {
+                state.setMoveEvaluation(lastMoveIdx, evaluation);
+            } else if (lastEvaluation && history.length > 0) {
                 const lastMove = history[lastMoveIdx];
-                const moveColor = turn === 'w' ? 'b' : 'w';
 
                 const tacticalFlags = detectTactics(game, lastMove.san);
 

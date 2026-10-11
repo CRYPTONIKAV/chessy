@@ -4,6 +4,9 @@ class StockfishEngine {
     private worker: Worker | null = null;
     private onEvalCallback: ((evaluation: EngineEvaluation) => void) | null = null;
     private isReady = false;
+    // Stockfish reports scores from the side to move's point of view.
+    // We remember who is to move so scores can be converted to White's view.
+    private sideToMove: 'w' | 'b' = 'w';
     private currentEval: {
         depth: number;
         lines: AnalysisLine[];
@@ -70,6 +73,7 @@ class StockfishEngine {
         return new Promise((resolve) => {
             // Reset state
             this.currentEval = { depth: 0, lines: [] };
+            this.sideToMove = fen.split(' ')[1] === 'b' ? 'b' : 'w';
 
             this.sendCommand('stop'); // Stop any previous search
             this.sendCommand(`setoption name MultiPV value ${multiPV}`);
@@ -96,7 +100,9 @@ class StockfishEngine {
             pv = pvString.split(' ').filter(token => /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(token));
         }
 
-        if (!depthMatch) return null;
+        // Progress lines such as "info depth 20 currmove e2e4 currmovenumber 1"
+        // carry no score or PV and must not overwrite a real analysis line.
+        if (!depthMatch || (!scoreMatch && !mateMatch) || pv.length === 0) return null;
 
         const depth = parseInt(depthMatch[1], 10);
         this.currentEval.depth = Math.max(this.currentEval.depth, depth);
@@ -109,6 +115,12 @@ class StockfishEngine {
         } else if (mateMatch) {
             mate = parseInt(mateMatch[1], 10);
             evaluation = mate > 0 ? 10000 : -10000;
+        }
+
+        // Normalize to White's point of view (positive = White is better)
+        if (this.sideToMove === 'b') {
+            evaluation = -evaluation;
+            if (mate !== undefined) mate = -mate;
         }
 
         const multipv = multipvMatch ? parseInt(multipvMatch[1], 10) : 1;

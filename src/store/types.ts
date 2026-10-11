@@ -7,7 +7,6 @@ export interface LevelConfig {
     depth: number;
     multiPV: number;
     skillLevel: number; // Stockfish Skill Level (0-20)
-    errorProbability: number; // Chance to make a sub-optimal move (0-1)
     allowUndo: boolean; // New
     name: string;
     description: string;
@@ -18,7 +17,6 @@ export const LEVELS: Record<DifficultyLevel, LevelConfig> = {
         depth: 5,
         multiPV: 1,
         skillLevel: 5,
-        errorProbability: 0.3,
         allowUndo: true,
         name: 'Beginner',
         description: 'Makes frequent mistakes. Good for learning basics.',
@@ -27,7 +25,6 @@ export const LEVELS: Record<DifficultyLevel, LevelConfig> = {
         depth: 10,
         multiPV: 1,
         skillLevel: 10,
-        errorProbability: 0.1,
         allowUndo: true,
         name: 'Intermediate',
         description: 'Solid play but misses tactical opportunities.',
@@ -36,7 +33,6 @@ export const LEVELS: Record<DifficultyLevel, LevelConfig> = {
         depth: 15,
         multiPV: 3,
         skillLevel: 15,
-        errorProbability: 0.05,
         allowUndo: false,
         name: 'Advanced',
         description: 'Strong tactical play. Hard to beat.',
@@ -45,7 +41,6 @@ export const LEVELS: Record<DifficultyLevel, LevelConfig> = {
         depth: 20,
         multiPV: 3,
         skillLevel: 20,
-        errorProbability: 0.0,
         allowUndo: false,
         name: 'Master',
         description: 'Near perfect play. Maximum challenge.',
@@ -54,7 +49,6 @@ export const LEVELS: Record<DifficultyLevel, LevelConfig> = {
         depth: 25,
         multiPV: 1,
         skillLevel: 20,
-        errorProbability: 0.0,
         allowUndo: false,
         name: 'Silent',
         description: 'Tournament mode: no feedback, no undo, strongest engine, post-game review only.',

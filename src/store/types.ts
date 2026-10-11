@@ -4,7 +4,8 @@ import { EngineEvaluation, MoveAnalysis, TacticalFlag } from '../engine/types';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced' | 'master' | 'silent';
 
 export interface LevelConfig {
-    depth: number;
+    depth: number; // maximum search depth
+    moveTimeMs: number; // hard cap on thinking time per search, whichever limit is hit first
     multiPV: number;
     skillLevel: number; // Stockfish Skill Level (0-20)
     allowUndo: boolean; // New
@@ -15,6 +16,7 @@ export interface LevelConfig {
 export const LEVELS: Record<DifficultyLevel, LevelConfig> = {
     beginner: {
         depth: 5,
+        moveTimeMs: 1000,
         multiPV: 1,
         skillLevel: 5,
         allowUndo: true,
@@ -23,6 +25,7 @@ export const LEVELS: Record<DifficultyLevel, LevelConfig> = {
     },
     intermediate: {
         depth: 10,
+        moveTimeMs: 1500,
         multiPV: 1,
         skillLevel: 10,
         allowUndo: true,
@@ -31,6 +34,7 @@ export const LEVELS: Record<DifficultyLevel, LevelConfig> = {
     },
     advanced: {
         depth: 15,
+        moveTimeMs: 2500,
         multiPV: 3,
         skillLevel: 15,
         allowUndo: false,
@@ -38,8 +42,9 @@ export const LEVELS: Record<DifficultyLevel, LevelConfig> = {
         description: 'Strong tactical play. Hard to beat.',
     },
     master: {
-        depth: 20,
-        multiPV: 3,
+        depth: 25,
+        moveTimeMs: 3000,
+        multiPV: 1,
         skillLevel: 20,
         allowUndo: false,
         name: 'Master',
@@ -47,6 +52,7 @@ export const LEVELS: Record<DifficultyLevel, LevelConfig> = {
     },
     silent: {
         depth: 25,
+        moveTimeMs: 3000,
         multiPV: 1,
         skillLevel: 20,
         allowUndo: false,

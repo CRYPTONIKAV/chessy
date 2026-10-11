@@ -127,7 +127,7 @@ If Magnus Carlsen used a training app, it would feel closer to this than anythin
 | ------------------- | ----------- | ---------- |
 | Page load           | < 1 second  | ✅ Achieved |
 | Move legality check | Instant     | ✅ Achieved |
-| Engine evaluation   | < 100ms     | ✅ Achieved |
+| Engine evaluation   | ≤ 1–3 s per move (capped per level) | ✅ Enforced by `movetime` |
 | Feedback render     | Same frame  | ✅ Achieved |
 
 **If feedback lags, users stop trusting it.**

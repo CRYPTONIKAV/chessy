@@ -1,6 +1,14 @@
 import { Chess, Move } from 'chess.js';
 import { EngineEvaluation, MoveAnalysis, TacticalFlag } from '../engine/types';
 
+export type ResultReason =
+    | 'checkmate'
+    | 'stalemate'
+    | 'threefold repetition'
+    | 'insufficient material'
+    | '50-move rule'
+    | 'resignation';
+
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced' | 'master' | 'silent';
 
 export interface LevelConfig {
@@ -78,6 +86,7 @@ export interface GameState {
     turn: 'w' | 'b';
     isGameOver: boolean;
     result: string | null; // "1-0", "0-1", "1/2-1/2" or null
+    resultReason: ResultReason | null; // How the game ended
     history: MoveHistory[];
 
     // Engine & Analysis
@@ -115,6 +124,7 @@ export interface GameActions {
     undoMove: () => void;
     redoMove: () => void;
     resetGame: () => void;
+    resign: () => void; // The player resigns the current game
 
     // Settings
     setDifficulty: (level: DifficultyLevel) => void;

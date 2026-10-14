@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react';
 import { createBestMoveArrow, Arrow } from '@/logic/arrows';
 import { Chess, Square } from 'chess.js';
-import { useGameStore } from '../../store/gameStore';
+import { useGameStore, moverOf } from '../../store/gameStore';
 import { useChessEngine } from '../../hooks/useChessEngine';
 import { LEVELS, DifficultyLevel } from '../../store/types';
 import { getTacticalDescription } from '@/logic/tactics';
@@ -138,7 +138,9 @@ function PlayContent() {
         setOptionSquares({});
     };
 
-    const canUndo = LEVELS[difficulty].allowUndo && history.length > 0;
+    // Against the engine, undo needs a move of the player's to take back
+    const canUndo = LEVELS[difficulty].allowUndo &&
+        history.some(m => gameMode !== 'pve' || moverOf(m) === (orientation === 'white' ? 'w' : 'b'));
     const canRedo = redoStack.length > 0 && LEVELS[difficulty].allowUndo;
     const canGoBack = (currentMoveIndex ?? -1) > -1;
     const canGoForward = (currentMoveIndex ?? -1) < history.length - 1;

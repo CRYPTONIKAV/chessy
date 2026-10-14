@@ -1,8 +1,39 @@
 import { create } from 'zustand';
 import { Chess } from 'chess.js';
-import { GameStore, LEVELS, DifficultyLevel, GameState } from './types';
+import { GameStore, LEVELS, DifficultyLevel, GameState, MoveHistory } from './types';
 
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+/** Colour that played a move, read from the position after it */
+export function moverOf(move: MoveHistory): 'w' | 'b' {
+    return move.fen.split(' ')[1] === 'w' ? 'b' : 'w';
+}
+
+/** Rebuild a game from its move list; null if any move is not legal */
+function replay(moves: MoveHistory[]): Chess | null {
+    const game = new Chess();
+    try {
+        for (const m of moves) {
+            game.move({ from: m.uci.slice(0, 2), to: m.uci.slice(2, 4), promotion: m.uci[4] });
+        }
+    } catch {
+        return null;
+    }
+    return game;
+}
+
+function positionState(game: Chess) {
+    const isGameOver = game.isGameOver();
+    return {
+        game,
+        fen: game.fen(),
+        turn: game.turn(),
+        isGameOver,
+        result: isGameOver
+            ? (game.isCheckmate() ? (game.turn() === 'w' ? '0-1' : '1-0') : '1/2-1/2')
+            : null,
+    };
+}
 
 export const useGameStore = create<GameStore>((set, get) => ({
     // Initial State
@@ -81,6 +112,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
                             : '1/2-1/2')
                         : null,
                     history: prevHistory,
+                    redoStack: [], // A new move makes any undone moves invalid
                     lastEvaluation: evaluation, // Save prev eval
                     evaluation: null, // Clear current eval until re-analysis
                 };
@@ -107,51 +139,60 @@ export const useGameStore = create<GameStore>((set, get) => ({
     },
 
     undoMove: () => {
-        const { game, history, redoStack } = get();
+        const { history, redoStack, gameMode, orientation } = get();
         if (history.length === 0) return;
-        // Remove last move from history and push to redoStack
-        const newHistory = history.slice(0, -1);
-        const undoneMove = history[history.length - 1];
-        const newRedoStack = [undoneMove, ...redoStack];
-        // Rebuild game state from newHistory
-        const gameCopy = new Chess();
-        newHistory.forEach(m => gameCopy.move(m.uci));
+
+        // Against the engine, take back the player's last move together with
+        // the engine's reply, so it is the player's turn again (otherwise the
+        // engine would immediately play again).
+        let cut = history.length - 1;
+        if (gameMode === 'pve') {
+            const playerColor = orientation === 'white' ? 'w' : 'b';
+            while (cut >= 0 && moverOf(history[cut]) !== playerColor) cut--;
+            if (cut < 0) return; // the player hasn't moved yet
+        }
+
+        const newHistory = history.slice(0, cut);
+        const gameCopy = replay(newHistory);
+        if (!gameCopy) return;
         set({
-            game: gameCopy,
-            fen: gameCopy.fen(),
-            turn: gameCopy.turn(),
-            isGameOver: false,
-            result: null,
+            ...positionState(gameCopy),
             history: newHistory,
-            redoStack: newRedoStack,
+            redoStack: [...history.slice(cut), ...redoStack],
             evaluation: null, // Clear eval on undo
+            lastEvaluation: null,
             lastMoveAnalysis: null,
+            currentMoveIndex: -1,
         });
     },
 
     redoMove: () => {
-        const { game, history, redoStack } = get();
+        const { history, redoStack, gameMode, orientation } = get();
         if (redoStack.length === 0) return;
-        // Pop move from redoStack and add to history
-        const [redoMove, ...restRedo] = redoStack;
-        const newHistory = [...history, redoMove];
-        // Rebuild game state from newHistory
-        const gameCopy = new Chess();
-        newHistory.forEach(m => gameCopy.move(m.uci));
+
+        // Against the engine, restore the player's move together with the
+        // engine's reply that followed it.
+        let take = 1;
+        if (gameMode === 'pve') {
+            const playerColor = orientation === 'white' ? 'w' : 'b';
+            while (take < redoStack.length && moverOf(redoStack[take]) !== playerColor) take++;
+        }
+
+        const newHistory = [...history, ...redoStack.slice(0, take)];
+        const gameCopy = replay(newHistory);
+        if (!gameCopy) {
+            // The redo moves no longer fit this game; drop them
+            set({ redoStack: [] });
+            return;
+        }
         set({
-            game: gameCopy,
-            fen: gameCopy.fen(),
-            turn: gameCopy.turn(),
-            isGameOver: gameCopy.isGameOver(),
-            result: gameCopy.isGameOver()
-                ? (gameCopy.isCheckmate()
-                    ? (gameCopy.turn() === 'w' ? '0-1' : '1-0')
-                    : '1/2-1/2')
-                : null,
+            ...positionState(gameCopy),
             history: newHistory,
-            redoStack: restRedo,
+            redoStack: redoStack.slice(take),
             evaluation: null, // Clear eval on redo
+            lastEvaluation: null,
             lastMoveAnalysis: null,
+            currentMoveIndex: -1,
         });
     },
 
@@ -163,9 +204,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
             isGameOver: false,
             result: null,
             history: [],
+            redoStack: [],
             evaluation: null,
+            lastEvaluation: null,
             lastMoveAnalysis: null,
             mistakes: [],
+            currentMoveIndex: -1,
             currentOpening: null,
         });
     },

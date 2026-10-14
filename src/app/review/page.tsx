@@ -1,94 +1,69 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore, useStoreHydrated } from '@/store/gameStore';
 import ChessBoard from '@/components/ChessBoard';
 import GameSummary from '@/components/Review/GameSummary';
 import MistakesTimeline from '@/components/Review/MistakesTimeline';
 import AnalysisControls from '@/components/Review/AnalysisControls';
 import MistakeCard from '@/components/MistakeCard';
 import CategoryBadge from '@/components/Review/CategoryBadge';
-import { groupMistakes, getCategoryInfo, MistakeCategory, CategorizedMistake } from '@/logic/mistakeCategories';
-import ExplanationDrawer from '@/components/ExplanationDrawer';
-
-import { useState } from 'react';
+import { groupMistakes, MistakeCategory, CategorizedMistake } from '@/logic/mistakeCategories';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import ShortcutsModal, { ShortcutDef } from '@/components/ShortcutsModal';
 
+const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
 export default function ReviewPage() {
-    const {
-        history,
-        currentMoveIndex,
-        setCurrentMoveIndex,
-        mistakes,
-        undoMove,
-        redoMove
-    } = useGameStore();
+    // The review is read-only: it never changes the game itself
+    const history = useGameStore((s) => s.history);
+    const orientation = useGameStore((s) => s.orientation);
+    const hydrated = useStoreHydrated();
 
     const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-    // Warning: ExplanationDrawer state is managed internally or by props? 
-    // Checking ExplanationDrawer usage, it seems it's currently imported but not used in the page component directly?
-    // Wait, I don't see ExplanationDrawer rendered in the previous file content I viewed. 
-    // Ah, lines 116-120 in previous view showed `currentMove.explanation`.
-    // The ExplanationDrawer component is imported but not rendered in the main page flow in the previous snippet?
-    // Let's assume we want to toggle the standard explanation UI or a drawer.
-    // For now, I'll allow Space to toggle the explanation visibility if possible, or just open/close the drawer if we implement one.
-    // Given the current code has inline explanations, maybe Space toggles `isShortcutsOpen`? No, Space is usually for Play/Pause or details.
-    // Let's stick to the plan: Space toggles Explanation Drawer. But we need to add the drawer state.
 
-    // Let's add the button at the bottom as requested.
-
-    // Handlers
-    const handleNext = () => {
-        if (currentMoveIndex < history.length - 1) {
-            setCurrentMoveIndex(currentMoveIndex + 1);
-        }
-    };
-
-    const handlePrev = () => {
-        if (currentMoveIndex >= -1) {
-            setCurrentMoveIndex(currentMoveIndex - 1);
-        }
-    };
-
-    const handleFirst = () => setCurrentMoveIndex(-1);
-    const handleLast = () => setCurrentMoveIndex(history.length - 1);
+    // Move shown on the board: -1 is the starting position. This is local to
+    // the review page; until the user navigates it follows the final move.
+    const lastIndex = history.length - 1;
+    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+    const reviewIndex = Math.min(selectedIndex ?? lastIndex, lastIndex);
+    const goTo = (index: number) => setSelectedIndex(Math.max(-1, Math.min(lastIndex, index)));
 
     useKeyboardShortcuts({
-        onNextMove: handleNext,
-        onPrevMove: handlePrev,
-        onFirstMove: handleFirst,
-        onLastMove: handleLast,
-        onUndo: undoMove,
-        onRedo: redoMove,
+        onNextMove: () => goTo(reviewIndex + 1),
+        onPrevMove: () => goTo(reviewIndex - 1),
+        onFirstMove: () => goTo(-1),
+        onLastMove: () => goTo(lastIndex),
         onShowShortcuts: () => setIsShortcutsOpen(true),
         onClose: () => setIsShortcutsOpen(false),
-        // onToggleExplanation: () => toggleExplanation() // TODO: Implement if drawer exists
     });
-
-    // Initialize review
-    useEffect(() => {
-        if (history.length > 0 && currentMoveIndex === -1) {
-            setCurrentMoveIndex(history.length - 1);
-        }
-    }, []);
 
     const reviewShortcuts: ShortcutDef[] = [
         { label: "Next Move", keys: ['→'] },
         { label: "Previous Move", keys: ['←'] },
         { label: "Game Start", keys: ['↑'] },
         { label: "Game End", keys: ['↓'] },
-        { label: "Undo Move", keys: ['Ctrl', 'Z'] },
-        { label: "Redo Move", keys: ['Ctrl', 'Y'] },
-        { label: "Explanation", keys: ['Space'] },
         { label: "Close", keys: ['Esc'] },
     ];
 
-    const currentMove = currentMoveIndex >= 0 ? history[currentMoveIndex] : null;
+    const currentMove = reviewIndex >= 0 ? history[reviewIndex] : null;
+    const currentMoveIndex = reviewIndex;
     const groupedMistakes = groupMistakes(history);
 
-    const currentFen = currentMove ? currentMove.fen : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+    const currentFen = currentMove ? currentMove.fen : START_FEN;
+
+    if (hydrated && history.length === 0) {
+        return (
+            <div className="min-h-screen bg-neutral-900 text-white p-8 flex flex-col items-center justify-center gap-4 text-center">
+                <h1 className="text-2xl font-bold">No game to review yet</h1>
+                <p className="text-gray-400">Play a game first. Your last game is kept here, even after a refresh.</p>
+                <Link href="/play" className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm">
+                    Play a game
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-neutral-900 text-white p-4 md:p-8 flex flex-col items-center">
@@ -118,12 +93,12 @@ export default function ReviewPage() {
                         <ChessBoard
                             fen={currentFen}
                             disableAnimations={false}
-                            boardOrientation={useGameStore.getState().orientation}
+                            boardOrientation={orientation}
                             arrows={[]}
                         />
                     </div>
-                    <AnalysisControls />
-                    <MistakesTimeline />
+                    <AnalysisControls index={reviewIndex} lastIndex={lastIndex} onChange={goTo} />
+                    <MistakesTimeline history={history} index={reviewIndex} onChange={goTo} />
                 </div>
 
                 {/* Right Column: Analysis & Summary */}
@@ -189,7 +164,6 @@ export default function ReviewPage() {
                         {Object.entries(groupedMistakes).map(([category, mistakes]) => {
                             if (mistakes.length === 0) return null;
                             const categoryKey = category as MistakeCategory;
-                            const categoryInfo = getCategoryInfo(categoryKey);
 
                             return (
                                 <div key={category} className="space-y-4">

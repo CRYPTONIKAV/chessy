@@ -1,4 +1,6 @@
+import { useSyncExternalStore } from 'react';
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { Chess } from 'chess.js';
 import { GameStore, LEVELS, DifficultyLevel, GameState, MoveHistory, ResultReason } from './types';
 
@@ -45,7 +47,13 @@ function positionState(game: Chess) {
     };
 }
 
-export const useGameStore = create<GameStore>((set, get) => ({
+// Parts of the game saved in the browser, so a refresh (or opening the review
+// page directly) doesn't lose the game. Everything else is derived on load.
+type PersistedGame = Pick<GameStore,
+    'history' | 'redoStack' | 'result' | 'resultReason' | 'difficulty' |
+    'orientation' | 'showEvalBar' | 'mistakes' | 'currentOpening'>;
+
+export const useGameStore = create<GameStore>()(persist((set, get) => ({
     // Initial State
     game: new Chess(),
     fen: INITIAL_FEN,
@@ -280,4 +288,49 @@ export const useGameStore = create<GameStore>((set, get) => ({
             return { history: updatedHistory };
         });
     }
+}), {
+    name: 'chessy-game',
+    version: 1,
+    storage: createJSONStorage(() => localStorage),
+    // Hydrate on the client after mount (see StoreHydration) to avoid
+    // server/client render mismatches
+    skipHydration: true,
+    partialize: (state): PersistedGame => ({
+        history: state.history,
+        redoStack: state.redoStack,
+        result: state.result,
+        resultReason: state.resultReason,
+        difficulty: state.difficulty,
+        orientation: state.orientation,
+        showEvalBar: state.showEvalBar,
+        mistakes: state.mistakes,
+        currentOpening: state.currentOpening,
+    }),
+    merge: (persisted, current) => {
+        const saved = persisted as Partial<PersistedGame> | undefined;
+        if (!saved) return current;
+        const game = replay(saved.history ?? []);
+        if (!game) return current; // corrupt save: start fresh
+        const position = positionState(game);
+        // A resignation isn't visible on the board, so keep the saved result
+        const resigned = saved.resultReason === 'resignation' && !!saved.result;
+        return {
+            ...current,
+            ...saved,
+            ...position,
+            ...(resigned ? { isGameOver: true, result: saved.result!, resultReason: 'resignation' as const } : {}),
+            history: saved.history ?? [],
+            redoStack: saved.redoStack ?? [],
+            currentMoveIndex: -1,
+        };
+    },
 }));
+
+/** True once the saved game has been loaded from the browser */
+export function useStoreHydrated(): boolean {
+    return useSyncExternalStore(
+        (onChange) => useGameStore.persist.onFinishHydration(onChange),
+        () => useGameStore.persist.hasHydrated(),
+        () => false
+    );
+}

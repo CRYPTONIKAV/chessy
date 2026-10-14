@@ -2,7 +2,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react';
 import { createBestMoveArrow, Arrow } from '@/logic/arrows';
 import { Chess, Square } from 'chess.js';
-import { useGameStore, moverOf } from '../../store/gameStore';
+import { useGameStore, moverOf, useStoreHydrated } from '../../store/gameStore';
+import Link from 'next/link';
 import { useChessEngine } from '../../hooks/useChessEngine';
 import { LEVELS, DifficultyLevel } from '../../store/types';
 import { getTacticalDescription } from '@/logic/tactics';
@@ -53,13 +54,16 @@ function PlayContent() {
         setCurrentOpening
     } = useGameStore();
 
-    // Initialize difficulty from URL
+    // Initialize difficulty from URL, after the saved game has loaded so the
+    // link's level isn't overwritten by the saved one
+    const hydrated = useStoreHydrated();
     useEffect(() => {
+        if (!hydrated) return;
         const difficultyParam = searchParams.get('difficulty');
         if (difficultyParam && Object.keys(LEVELS).includes(difficultyParam)) {
             setDifficulty(difficultyParam as DifficultyLevel);
         }
-    }, [searchParams, setDifficulty]);
+    }, [searchParams, setDifficulty, hydrated]);
 
     // Silent mode toggle (UI override)
     const [silentMode, setSilentMode] = useState(false);
@@ -160,11 +164,13 @@ function PlayContent() {
 
 
     // Post-game review modal trigger
-    // Post-game review modal trigger
-    useEffect(() => {
-        if (result && !showReview) setShowReview(true);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [result]);
+    // Open the post-game review when a game ends during this visit, not when
+    // an already-finished game is loaded from the browser
+    const [prevResult, setPrevResult] = useState<string | null | undefined>(undefined);
+    if (hydrated && prevResult !== result) {
+        setPrevResult(result);
+        if (prevResult === null && result) setShowReview(true);
+    }
 
     // Opening detection
     useEffect(() => {
@@ -447,12 +453,20 @@ function PlayContent() {
                             <div className="mt-4 p-4 rounded-lg border border-white/10 bg-white/5 text-center" role="status">
                                 <div className="font-bold text-lg text-white">{describeResult(result, resultReason, orientation)}</div>
                                 <div className="text-xs font-mono text-text-secondary mt-1">{result}</div>
-                                <button
-                                    onClick={handleReset}
-                                    className="mt-3 w-full py-2 rounded-md bg-white/10 hover:bg-white/20 text-sm font-semibold text-white transition-colors"
-                                >
-                                    New game
-                                </button>
+                                <div className="mt-3 grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={handleReset}
+                                        className="py-2 rounded-md bg-white/10 hover:bg-white/20 text-sm font-semibold text-white transition-colors"
+                                    >
+                                        New game
+                                    </button>
+                                    <Link
+                                        href="/review"
+                                        className="py-2 rounded-md bg-white/10 hover:bg-white/20 text-sm font-semibold text-white transition-colors"
+                                    >
+                                        Review game
+                                    </Link>
+                                </div>
                             </div>
                         )}
                     </div>

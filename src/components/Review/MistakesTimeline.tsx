@@ -1,49 +1,36 @@
-import React, { useRef, useEffect } from 'react';
-import { useGameStore } from '@/store/gameStore';
+import React from 'react';
+import { MoveHistory } from '@/store/types';
 
-export default function MistakesTimeline() {
-    const { history, currentMoveIndex, setCurrentMoveIndex } = useGameStore();
-    const scrollRef = useRef<HTMLDivElement>(null);
+interface MistakesTimelineProps {
+    history: MoveHistory[];
+    index: number; // move currently shown (-1 = starting position)
+    onChange: (index: number) => void;
+}
 
-    // Auto-scroll to current move
-    useEffect(() => {
-        if (scrollRef.current && currentMoveIndex >= 0) {
-            // Simple logic to keep current move in view
-            // In a real app we might want smoother centering
-        }
-    }, [currentMoveIndex]);
+const getBarColor = (move: MoveHistory) => {
+    const grade = move.analysis?.grade;
+    if (grade === 'blunder') return 'bg-red-500';
+    if (grade === 'mistake') return 'bg-orange-500';
+    if (grade === 'inaccuracy') return 'bg-yellow-400';
+    if (grade === 'brilliant') return 'bg-purple-500';
+    return 'bg-gray-400';
+};
 
-    const getBarColor = (move: any) => {
-        const grade = move.analysis?.grade;
-        if (grade === 'blunder') return 'bg-red-500';
-        if (grade === 'mistake') return 'bg-orange-500';
-        if (grade === 'inaccuracy') return 'bg-yellow-400';
-        if (grade === 'brilliant') return 'bg-purple-500';
-        // Fallback based on eval? For now just gray/white
-        return 'bg-gray-400';
-    };
-
-    const getHeight = (move: any) => {
-        // Logic to make significant moves taller? 
-        // Or maybe just uniform blocks like lichess analysis bar
-        // Let's do a uniform bar for now, but color coded
-        return 'h-4';
-    };
-
+export default function MistakesTimeline({ history, index, onChange }: MistakesTimelineProps) {
     return (
-        <div className="w-full bg-black/20 rounded-lg p-2 overflow-x-auto" ref={scrollRef}>
+        <div className="w-full bg-black/20 rounded-lg p-2 overflow-x-auto">
             <div className="flex items-end h-16 gap-[1px] min-w-max">
-                {history.map((move, index) => (
+                {history.map((move, i) => (
                     <button
-                        key={index}
-                        onClick={() => setCurrentMoveIndex(index)}
+                        key={i}
+                        onClick={() => onChange(i)}
                         className={`
                         w-4 rounded-t-sm transition-all hover:opacity-80
                         ${getBarColor(move)}
-                        ${currentMoveIndex === index ? 'opacity-100 ring-2 ring-white/50 z-10' : 'opacity-70'}
+                        ${index === i ? 'opacity-100 ring-2 ring-white/50 z-10' : 'opacity-70'}
                         ${move.analysis?.grade === 'blunder' || move.analysis?.grade === 'brilliant' ? 'h-full' : 'h-8'}
                     `}
-                        title={`${index + 1}. ${move.san} - ${move.analysis?.grade || 'Normal'}`}
+                        title={`${i + 1}. ${move.san} - ${move.analysis?.grade || 'Normal'}`}
                     />
                 ))}
             </div>

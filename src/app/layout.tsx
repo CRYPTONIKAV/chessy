@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
+import StoreHydration from "@/components/StoreHydration";
 
 export const metadata: Metadata = {
   title: "Chessy",
@@ -14,6 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased font-sans">
+        <StoreHydration />
         {children}
       </body>
     </html>

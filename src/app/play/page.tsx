@@ -302,7 +302,7 @@ function PlayContent() {
     return (
         <>
             <ShortcutsModal open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} shortcuts={playShortcuts} />
-            {showReview && <PostGameReview onClose={() => setShowReview(false)} />}
+            {showReview && <PostGameReview onClose={() => setShowReview(false)} onNewGame={handleReset} />}
             <div className="flex flex-col lg:flex-row h-screen w-full bg-background overflow-hidden relative">
                 {/* Background Blobs */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">

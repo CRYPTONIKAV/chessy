@@ -1,14 +1,43 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import Link from 'next/link';
 import { useGameStore } from '@/store/gameStore';
 import ChessBoard from '@/components/ChessBoard';
-import ExplanationDrawer from '@/components/ExplanationDrawer';
 import { generateJSON, generatePGN } from '@/logic/export';
+import { describeResult } from '@/logic/result';
 
-export default function PostGameReview({ onClose }: { onClose: () => void }) {
+interface PostGameReviewProps {
+  onClose: () => void;
+  onNewGame: () => void;
+}
+
+const GRADE_COLORS: Record<string, string> = {
+  brilliant: 'text-purple-300',
+  good: 'text-emerald-300',
+  inaccuracy: 'text-yellow-300',
+  mistake: 'text-orange-300',
+  blunder: 'text-red-400',
+};
+
+export default function PostGameReview({ onClose, onNewGame }: PostGameReviewProps) {
   const store = useGameStore();
-  const { history } = store;
+  const { history, result, resultReason, orientation } = store;
   const [selectedMove, setSelectedMove] = React.useState<number>(-1);
   const move = selectedMove >= 0 ? history[selectedMove] : null;
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Start keyboard focus inside the dialog
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, []);
+
+  // Close on Escape
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
 
   const downloadFile = (content: string, filename: string, type: string) => {
     const blob = new Blob([content], { type });
@@ -32,83 +61,98 @@ export default function PostGameReview({ onClose }: { onClose: () => void }) {
     downloadFile(pgn, `chessy_game_${new Date().toISOString().split('T')[0]}.pgn`, 'text/plain');
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
-      <div className="bg-white text-gray-900 rounded-lg shadow-xl p-6 max-w-3xl w-full relative">
-        <button onClick={onClose} className="absolute top-2 right-2 text-2xl hover:text-red-500 transition-colors">×</button>
+  const secondaryButton = 'px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-sm text-gray-200 transition-colors';
+  const primaryButton = 'px-3 py-2 rounded-md bg-white/15 hover:bg-white/25 border border-white/20 text-sm font-semibold text-white transition-colors';
 
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Post-Game Review</h2>
-          <div className="flex gap-2 mr-8">
-            <button
-              onClick={handleExportPGN}
-              className="px-3 py-1 bg-primary text-primary-foreground text-sm rounded shadow hover:bg-primary/90 transition-colors"
-            >
-              Export PGN
-            </button>
-            <button
-              onClick={handleExportJSON}
-              className="px-3 py-1 bg-secondary text-secondary-foreground text-sm rounded shadow hover:bg-secondary/90 transition-colors"
-            >
-              Export JSON
-            </button>
-          </div>
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="post-game-title"
+        className="bg-neutral-900 text-gray-100 border border-white/10 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          ref={closeButtonRef}
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full text-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          ×
+        </button>
+
+        <div className="mb-4 pr-10">
+          <h2 id="post-game-title" className="text-xl font-bold">Post-Game Review</h2>
+          {result && (
+            <p className="text-sm text-gray-400 mt-1">
+              {describeResult(result, resultReason, orientation)} · <span className="font-mono">{result}</span>
+            </p>
+          )}
         </div>
 
-        <div className="flex gap-6">
-          <div className="flex-1">
-            <ChessBoard fen={move?.fen || history[history.length - 1]?.fen || ''} disableAnimations />
-            <div className="mt-4 flex flex-wrap gap-2">
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="w-full md:flex-1 min-w-0">
+            <ChessBoard
+              fen={move?.fen || history[history.length - 1]?.fen || ''}
+              boardOrientation={orientation}
+              disableAnimations
+            />
+            <div className="mt-4 flex flex-wrap gap-1">
               {history.map((m, i) => (
                 <button
                   key={i}
-                  className={`px-2 py-1 rounded ${selectedMove === i ? 'bg-accent text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+                  className={`px-2 py-1 rounded text-sm font-mono transition-colors ${selectedMove === i ? 'bg-white/20 text-white' : 'bg-white/5 hover:bg-white/10'} ${GRADE_COLORS[m.analysis?.grade ?? ''] ?? 'text-gray-300'}`}
                   onClick={() => setSelectedMove(i)}
+                  aria-pressed={selectedMove === i}
                 >
-                  {m.san}
+                  {i % 2 === 0 ? `${i / 2 + 1}. ` : ''}{m.san}
                 </button>
               ))}
             </div>
           </div>
-          <div className="w-80 h-[400px] overflow-y-auto pr-2">
+
+          <div className="w-full md:w-72 text-sm">
             {move ? (
-              <>
-                <div className="mb-2">
-                  <strong>Move:</strong> {move.san} ({move.uci})
+              <div className="space-y-2">
+                <div>
+                  <span className="text-gray-400">Move:</span> <span className="font-semibold">{move.san}</span>
                 </div>
-                <div className="mb-2">
-                  <strong>Evaluation:</strong> {move.evaluation ? (move.evaluation.mate ? `M${Math.abs(move.evaluation.mate)}` : (move.evaluation.evaluation / 100).toFixed(2)) : 'N/A'}
+                <div>
+                  <span className="text-gray-400">Evaluation:</span>{' '}
+                  {move.evaluation ? (move.evaluation.mate ? `M${Math.abs(move.evaluation.mate)}` : (move.evaluation.evaluation / 100).toFixed(2)) : 'N/A'}
                 </div>
                 {move.analysis && (
-                  <div className="mb-2">
-                    <strong>Grade:</strong> <span className="capitalize">{move.analysis.grade}</span>
+                  <div>
+                    <span className="text-gray-400">Grade:</span>{' '}
+                    <span className={`capitalize font-semibold ${GRADE_COLORS[move.analysis.grade] ?? ''}`}>{move.analysis.grade}</span>
                   </div>
                 )}
                 {move.tacticalFlags && move.tacticalFlags.length > 0 && (
-                  <div className="mb-2">
-                    <strong>Tactics:</strong> {move.tacticalFlags.join(', ')}
+                  <div>
+                    <span className="text-gray-400">Tactics:</span> {move.tacticalFlags.join(', ')}
                   </div>
                 )}
                 {move.explanation && (
-                  <div className="mb-2 p-2 bg-gray-50 rounded text-sm">
-                    <strong>Explanation:</strong> {move.explanation}
+                  <div className="p-3 rounded-md bg-white/5 border border-white/10">
+                    {move.explanation}
                   </div>
                 )}
-
-                <div className="mt-4 border-t pt-4">
-                  <ExplanationDrawer
-                    open={!!move}
-                    onClose={() => { }}
-                    violatedPrinciple={move.analysis?.grade === 'mistake' || move.analysis?.grade === 'blunder' ? move.explanation : undefined}
-                    tacticalTags={move.tacticalFlags}
-                    whyMatters={move.explanation}
-                  />
-                </div>
-              </>
+              </div>
             ) : (
-              <div className="text-gray-500 italic text-center mt-10">Select a move to see details</div>
+              <div className="text-gray-500 italic text-center md:mt-10">Select a move to see details</div>
             )}
           </div>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap gap-2 justify-end">
+          <button onClick={handleExportPGN} className={secondaryButton}>Export PGN</button>
+          <button onClick={handleExportJSON} className={secondaryButton}>Export JSON</button>
+          <Link href="/review" className={secondaryButton}>Full review</Link>
+          <button onClick={onNewGame} className={primaryButton}>New game</button>
         </div>
       </div>
     </div>

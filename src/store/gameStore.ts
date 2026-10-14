@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Chess } from 'chess.js';
-import { GameStore, LEVELS, DifficultyLevel, GameState, MoveHistory } from './types';
+import { GameStore, LEVELS, DifficultyLevel, GameState, MoveHistory, ResultReason } from './types';
 
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
@@ -22,6 +22,15 @@ function replay(moves: MoveHistory[]): Chess | null {
     return game;
 }
 
+function endReason(game: Chess): ResultReason | null {
+    if (game.isCheckmate()) return 'checkmate';
+    if (game.isStalemate()) return 'stalemate';
+    if (game.isThreefoldRepetition()) return 'threefold repetition';
+    if (game.isInsufficientMaterial()) return 'insufficient material';
+    if (game.isDraw()) return '50-move rule';
+    return null;
+}
+
 function positionState(game: Chess) {
     const isGameOver = game.isGameOver();
     return {
@@ -32,6 +41,7 @@ function positionState(game: Chess) {
         result: isGameOver
             ? (game.isCheckmate() ? (game.turn() === 'w' ? '0-1' : '1-0') : '1/2-1/2')
             : null,
+        resultReason: isGameOver ? endReason(game) : null,
     };
 }
 
@@ -42,6 +52,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     turn: 'w',
     isGameOver: false,
     result: null,
+    resultReason: null,
     history: [],
 
     evaluation: null,
@@ -74,8 +85,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
             historyLength: history.length
         });
 
-        // Clone to avoid mutation issues (though chess.js is mutable, we want distinct state updates)
-        const gameCopy = new Chess(game.fen());
+        if (get().result) return false; // e.g. after resigning
+
+        // Rebuild from the full move list (not just the FEN) so chess.js can
+        // detect threefold repetition
+        const gameCopy = replay(history) ?? new Chess(game.fen());
         console.log('[gameStore.makeMove] Created game copy with FEN:', gameCopy.fen());
 
         try {
@@ -102,15 +116,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 const prevHistory = [...history, newMoveEntry];
 
                 const newState = {
-                    game: gameCopy,
-                    fen: gameCopy.fen(),
-                    turn: gameCopy.turn(),
-                    isGameOver: gameCopy.isGameOver(),
-                    result: gameCopy.isGameOver()
-                        ? (gameCopy.isCheckmate()
-                            ? (gameCopy.turn() === 'w' ? '0-1' : '1-0')
-                            : '1/2-1/2')
-                        : null,
+                    ...positionState(gameCopy),
                     history: prevHistory,
                     redoStack: [], // A new move makes any undone moves invalid
                     lastEvaluation: evaluation, // Save prev eval
@@ -203,6 +209,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             turn: 'w',
             isGameOver: false,
             result: null,
+            resultReason: null,
             history: [],
             redoStack: [],
             evaluation: null,
@@ -211,6 +218,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
             mistakes: [],
             currentMoveIndex: -1,
             currentOpening: null,
+        });
+    },
+
+    resign: () => {
+        const { result, orientation } = get();
+        if (result) return;
+        set({
+            isGameOver: true,
+            result: orientation === 'white' ? '0-1' : '1-0',
+            resultReason: 'resignation',
+            redoStack: [],
+            currentMoveIndex: -1,
         });
     },
 

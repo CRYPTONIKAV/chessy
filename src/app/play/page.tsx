@@ -7,6 +7,7 @@ import { useChessEngine } from '../../hooks/useChessEngine';
 import { LEVELS, DifficultyLevel } from '../../store/types';
 import { getTacticalDescription } from '@/logic/tactics';
 import { detectOpening } from '@/logic/openings';
+import { describeResult } from '@/logic/result';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 
@@ -34,6 +35,8 @@ function PlayContent() {
         undoMove,
         redoMove,
         resetGame,
+        resign,
+        resultReason,
         difficulty,
         setDifficulty,
         evaluation,
@@ -133,8 +136,12 @@ function PlayContent() {
         setDifficulty(e.target.value as DifficultyLevel);
     };
 
+    const gameInProgress = history.length > 0 && !result;
+
     const handleReset = () => {
+        if (gameInProgress && !window.confirm('Start a new game? The current game will be lost.')) return;
         resetGame();
+        setShowReview(false);
         setOptionSquares({});
     };
 
@@ -436,7 +443,18 @@ function PlayContent() {
                         {mounted && !result && game.turn() !== orientation.charAt(0) && (
                             <div className="mt-3 text-xs text-text-secondary animate-pulse px-1" role="status">Engine is thinking…</div>
                         )}
-                        {result && <div className="mt-4 p-3 bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/20 rounded-lg text-center font-bold text-xl text-white animate-pulse">{result}</div>}
+                        {result && (
+                            <div className="mt-4 p-4 rounded-lg border border-white/10 bg-white/5 text-center" role="status">
+                                <div className="font-bold text-lg text-white">{describeResult(result, resultReason, orientation)}</div>
+                                <div className="text-xs font-mono text-text-secondary mt-1">{result}</div>
+                                <button
+                                    onClick={handleReset}
+                                    className="mt-3 w-full py-2 rounded-md bg-white/10 hover:bg-white/20 text-sm font-semibold text-white transition-colors"
+                                >
+                                    New game
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* History */}
@@ -513,6 +531,22 @@ function PlayContent() {
                     <div className="mt-2 grid grid-cols-2 gap-2">
                         <button onClick={canUndo ? undoMove : undefined} disabled={!canUndo} className="nav-btn text-xs">Undo</button>
                         <button onClick={canRedo ? redoMove : undefined} disabled={!canRedo} className="nav-btn text-xs">Redo</button>
+                    </div>
+
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                        <button
+                            onClick={handleReset}
+                            className="py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-foreground transition-colors"
+                        >
+                            New game
+                        </button>
+                        <button
+                            onClick={() => { if (window.confirm('Resign this game?')) resign(); }}
+                            disabled={!gameInProgress}
+                            className="py-2 rounded-md bg-white/5 hover:bg-error/20 border border-white/10 text-xs text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white/5"
+                        >
+                            Resign
+                        </button>
                     </div>
                 </aside>
 

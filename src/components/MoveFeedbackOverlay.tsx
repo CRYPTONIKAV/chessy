@@ -1,36 +1,32 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useGameStore } from '../store/gameStore';
+import React, { useEffect, useState } from 'react';
+import { MoveAnalysis } from '../engine/types';
 
-export default function MoveFeedbackOverlay() {
-    const { lastMoveAnalysis, turn } = useGameStore();
-    const [visible, setVisible] = useState(false);
-    const [animate, setAnimate] = useState(false);
-    const lastMoveIdRef = useRef<string | null>(null);
+interface MoveFeedbackOverlayProps {
+    // Grade to flash on the board. The parent decides what the current level
+    // allows; null shows nothing.
+    analysis: MoveAnalysis | null;
+}
+
+const DISPLAY_MS = 2500;
+
+export default function MoveFeedbackOverlay({ analysis }: MoveFeedbackOverlayProps) {
+    // Show each new analysis once, for a few seconds
+    const [shown, setShown] = useState<MoveAnalysis | null>(analysis);
+    const [prevAnalysis, setPrevAnalysis] = useState<MoveAnalysis | null>(analysis);
+    if (analysis !== prevAnalysis) {
+        setPrevAnalysis(analysis);
+        setShown(analysis);
+    }
 
     useEffect(() => {
-        if (lastMoveAnalysis && lastMoveAnalysis.playerMove !== lastMoveIdRef.current) {
-            lastMoveIdRef.current = lastMoveAnalysis.playerMove;
+        if (!shown) return;
+        const timer = setTimeout(() => setShown(null), DISPLAY_MS);
+        return () => clearTimeout(timer);
+    }, [shown]);
 
-            // Only show feedback for the player who just moved
-            // If it's white's turn now, Black just moved.
-            // We usually want to show feedback for the human player. 
-            // Assuming human vs computer, we might want to check game mode.
-            // For now, show for all moves that have analysis.
+    if (!shown) return null;
 
-            setVisible(true);
-            setAnimate(true);
-
-            const timer = setTimeout(() => {
-                setVisible(false);
-            }, 2500); // Show for 2.5 seconds
-
-            return () => clearTimeout(timer);
-        }
-    }, [lastMoveAnalysis]);
-
-    if (!visible || !lastMoveAnalysis) return null;
-
-    const { grade } = lastMoveAnalysis;
+    const { grade } = shown;
 
     const getBadgeStyle = (grade: string) => {
         switch (grade) {
@@ -92,10 +88,9 @@ export default function MoveFeedbackOverlay() {
             <div
                 className={`
                     backdrop-blur-md px-4 py-2 rounded-xl border ${style.bg} ${style.border} ${style.text} ${style.glow}
-                    transform transition-all duration-500 ease-out flex items-center gap-3
-                    ${animate ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-4 opacity-0 scale-95'}
+                    flex items-center gap-3
                 `}
-                onTransitionEnd={() => setAnimate(false)}
+                role="status"
             >
                 <span className="text-2xl filter drop-shadow-lg">{style.icon}</span>
                 <div>

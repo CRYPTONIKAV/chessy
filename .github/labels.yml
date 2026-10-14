@@ -1,0 +1,63 @@
+# Repository labels. Synced to GitHub by .github/workflows/labels.yml when
+# this file changes on main. Labels not listed here are left untouched.
+
+# Type
+- name: bug
+  color: d73a4a
+  description: Something isn't working
+- name: enhancement
+  color: a2eeef
+  description: New feature or improvement
+- name: documentation
+  color: 0075ca
+  description: Improvements or additions to documentation
+- name: security
+  color: b60205
+  description: Security fix or hardening
+
+# Contribution
+- name: good first issue
+  color: 7057ff
+  description: Good for newcomers
+- name: help wanted
+  color: 008672
+  description: Contributions especially welcome
+
+# Difficulty
+- name: "difficulty: easy"
+  color: c2e0c6
+  description: A few hours; little context needed
+- name: "difficulty: medium"
+  color: fbca04
+  description: A day or two; touches a few files
+- name: "difficulty: hard"
+  color: e99695
+  description: Larger change; read the related code first
+
+# Area
+- name: "area: engine"
+  color: 1d76db
+  description: Stockfish integration and engine settings
+- name: "area: training"
+  color: 5319e7
+  description: Grading, explanations, tactics, openings
+- name: "area: ui"
+  color: f9d0c4
+  description: Screens, components, styling, accessibility
+- name: "area: review"
+  color: bfd4f2
+  description: Post-game review and export
+- name: "area: multiplayer"
+  color: 0e8a16
+  description: Playing a friend via a shared link
+- name: "area: infra"
+  color: 5a5a5a
+  description: CI, Docker, dependencies, workflows
+
+# Planning
+- name: revamp
+  color: ff7619
+  description: Part of the frontend revamp
+- name: tracking
+  color: ededed
+  description: Tracks a group of issues

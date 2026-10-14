@@ -1,0 +1,57 @@
+name: Bug report
+description: Something in Chessy doesn't work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please check the [open issues](https://github.com/youneedgreg/chessy/issues) first, in case it's already known.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect instead?
+      placeholder: After 1.e4 on Beginner the arrow points to the wrong square…
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open /play?difficulty=beginner
+        2. Choose Black
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: level
+    attributes:
+      label: Level
+      options:
+        - Beginner
+        - Intermediate
+        - Advanced
+        - Master
+        - Silent
+        - Not related to a level
+    validations:
+      required: true
+  - type: input
+    id: moves
+    attributes:
+      label: Moves or PGN (if relevant)
+      description: Export the PGN from the post-game review, or list the moves.
+      placeholder: 1. e4 e5 2. Nf3 Nc6
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      placeholder: Chrome 130 on Android / Safari 18 on macOS
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or console errors
+      description: Drag images in, or paste errors from the browser console.

@@ -1,44 +1,56 @@
-# Contributing to Chess Training Platform
+# Contributing to Chessy
 
-Thank you for your interest in contributing! This project is built on the philosophy of **speed, clarity, and respect for the player's intelligence**.
-
-All contributions should align with these core values.
+Thanks for your interest in Chessy! It's built on the philosophy of **speed, clarity, and respect for the player's intelligence**. Contributions of every size are welcome, from fixing a typo to building multiplayer.
 
 ---
 
 ## Table of Contents
 
-1. [Code of Conduct](#code-of-conduct)
-2. [Getting Started](#getting-started)
-3. [Development Workflow](#development-workflow)
-4. [Code Standards](#code-standards)
-5. [What to Contribute](#what-to-contribute)
-6. [What NOT to Contribute](#what-not-to-contribute)
-7. [Submitting Changes](#submitting-changes)
+1. [Your First Contribution](#your-first-contribution)
+2. [Philosophy](#philosophy)
+3. [Getting Started](#getting-started)
+4. [Development Workflow](#development-workflow)
+5. [Code Standards](#code-standards)
+6. [What to Contribute](#what-to-contribute)
+7. [What NOT to Contribute](#what-not-to-contribute)
 8. [Architecture Guidelines](#architecture-guidelines)
-9. [Testing Requirements](#testing-requirements)
+9. [Testing](#testing)
+10. [Getting Help](#getting-help)
 
 ---
 
-## Code of Conduct
+## Your First Contribution
 
-### Our Philosophy
+1. **Pick an issue.** The [roadmap issue #104](https://github.com/youneedgreg/chessy/issues/104) lists everything planned, grouped by area. For a first PR, look at [good first issues](https://github.com/youneedgreg/chessy/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+2. **Claim it.** Comment "I'd like to work on this" so nobody duplicates the work. If you go quiet for two weeks, the issue may be reassigned.
+3. **Read the issue.** Every issue has a problem statement, the files involved, a suggested fix and "Done when" criteria.
+4. **Open a PR** using the template, and link the issue with `Closes #123`.
+
+### Labels
+
+| Label | Meaning |
+| --- | --- |
+| `good first issue` | Small, well-defined, and little context needed |
+| `help wanted` | Contributions especially welcome |
+| `difficulty: easy / medium / hard` | Rough size of the work |
+| `area: engine / training / ui / review / multiplayer / infra` | Which part of the app it touches |
+| `revamp` | Part of the frontend revamp (#133–#139); build these in order |
+
+---
+
+## Philosophy
 
 This project has strong opinions about how chess should be taught:
 
-- **No gamification** — No points, badges, streaks, or vanity metrics
-- **No social features** — No chat, no profiles, no leaderboards
-- **No friction** — No accounts, no paywalls, no tracking
-- **Performance first** — Fast feedback beats clever features
+- **No gamification:** no points, badges, streaks, or vanity metrics.
+- **No social noise:** no chat, profiles, followers, or leaderboards. Playing a friend through a shared link (#140) is welcome; it adds no accounts or chat.
+- **No friction:** no accounts, no paywalls, no tracking.
+- **Honest feedback:** grades and explanations must be correct, or not shown at all.
+- **Performance first:** fast feedback beats clever features.
 
-If a proposed feature violates these principles, it won't be merged—regardless of code quality.
+If a proposed feature violates these principles, it won't be merged, regardless of code quality.
 
-### Be Respectful
-
-- Assume good intent
-- Give constructive feedback
-- Debate ideas, not people
-- Respect maintainer decisions on philosophy
+Everyone taking part is expected to follow the [Code of Conduct](./CODE_OF_CONDUCT.md). Report security problems privately as described in [SECURITY.md](./SECURITY.md).
 
 ---
 
@@ -46,88 +58,76 @@ If a proposed feature violates these principles, it won't be merged—regardless
 
 ### Prerequisites
 
-- **Node.js** 18+ and npm
+- **Node.js 20+** and npm
 - **Git**
-- Basic understanding of TypeScript, React, and Next.js
-- Familiarity with chess terminology (not required to be a strong player)
+- Basic understanding of TypeScript, React and Next.js
+- Familiarity with chess terminology (you don't need to be a strong player)
 
 ### Setup
 
 ```bash
-# Fork the repository
+# Fork the repository on GitHub, then:
 git clone https://github.com/YOUR_USERNAME/chessy.git
 cd chessy
 
-# Install dependencies
 npm install
-
-# Run development server
-npm run dev
-
-# Run tests
-npm test
-
-# Run linter
-npm run lint
+npm run dev          # http://localhost:3000
 ```
+
+### Useful scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build (also type-checks) |
+| `npm run lint` | ESLint |
+| `npm run type-check` | TypeScript without emitting |
+| `npm run format` | Prettier |
+
+> A test runner isn't set up yet. Adding one is [#125](https://github.com/youneedgreg/chessy/issues/125), a great first contribution.
 
 ---
 
 ## Development Workflow
 
-### 1. Find or Create an Issue
+### 1. Find or create an issue
 
-- Check existing issues first
-- For bugs: describe the problem, steps to reproduce, expected vs actual behavior
-- For features: explain why it aligns with project philosophy
-- Wait for maintainer approval before starting work on major features
+- Check [existing issues](https://github.com/youneedgreg/chessy/issues) first.
+- Bugs: use the bug report template (steps, level, moves/PGN, browser).
+- Features: explain how the idea fits the philosophy.
+- **Wait for a maintainer to confirm** before starting large features.
 
-### 2. Create a Branch
+### 2. Create a branch
 
 ```bash
-git checkout -b feature/your-feature-name
-# or
-git checkout -b fix/your-bug-fix
+git checkout -b fix/arrow-orientation
 ```
 
-Branch naming:
-- `feature/` for new features
-- `fix/` for bug fixes
-- `refactor/` for code improvements
-- `docs/` for documentation
-- `test/` for test additions
+Prefixes: `feat/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`.
 
-### 3. Make Changes
+### 3. Make changes
 
-- Keep commits atomic and focused
-- Write clear commit messages
-- Follow code standards (see below)
-- Test your changes thoroughly
+- Keep PRs focused: one issue per PR.
+- Write clear commit messages ("Fix arrows pointing at mirrored squares as Black").
+- Follow the code standards below.
 
-### 4. Test Locally
+### 4. Check locally
 
 ```bash
-# Run all tests
-npm test
-
-# Check TypeScript
-npm run type-check
-
-# Lint code
 npm run lint
-
-# Test in all 4 training levels
-npm run dev
+npm run type-check
+npm run build
+npm run dev   # play through the flow you changed
 ```
 
-**Critical**: Test your changes at all four difficulty levels (Beginner, Intermediate, Advanced, Professional) to ensure level-specific behavior works correctly.
+If your change touches gameplay or feedback, test it at **all five levels** (Beginner, Intermediate, Advanced, Master, Silent) and **as both White and Black**.
 
-### 5. Submit a Pull Request
+### 5. Open a pull request
 
-- Reference the issue number
-- Describe what changed and why
-- Include screenshots/recordings for UI changes
-- Ensure all checks pass
+The PR template asks for:
+- what changed and why;
+- how you tested it;
+- screenshots for UI changes (desktop and mobile).
 
 ---
 
@@ -135,10 +135,8 @@ npm run dev
 
 ### TypeScript
 
-- **Strict mode enabled** — No `any` types without justification
-- Prefer interfaces over types for objects
-- Use descriptive variable names
-- Add JSDoc comments for complex functions
+- **Strict mode is on.** Avoid `any`; if it's unavoidable, explain why.
+- Use descriptive names, and add JSDoc for anything non-obvious.
 
 ```typescript
 // ✅ Good
@@ -149,103 +147,69 @@ interface MoveAnalysis {
 }
 
 // ❌ Bad
-type MA = {
-  pm: string;
-  ebm: string;
-  ed: number;
-};
+type MA = { pm: string; ebm: string; ed: number };
 ```
 
-### React Components
+### React components
 
-- Functional components with hooks
-- Use `memo` for expensive re-renders
-- Keep components focused and composable
-- Props should be clearly typed
-
-```tsx
-// ✅ Good
-interface FeedbackProps {
-  grade: MoveGrade;
-  explanation: string;
-  showArrow: boolean;
-}
-
-export const FeedbackOverlay: React.FC<FeedbackProps> = memo(({ 
-  grade, 
-  explanation, 
-  showArrow 
-}) => {
-  // ...
-});
-```
+- Use function components with hooks.
+- Keep components focused and composable, with clearly typed props.
+- Use `memo` only where profiling shows it helps.
 
 ### Performance
 
-- **Move feedback must appear instantly** (<100ms)
-- Avoid blocking the main thread
-- Use Web Workers for heavy computation
-- Lazy load non-critical components
-- Profile before optimizing, but always prioritize speed
+- Never block the main thread with heavy work: the engine runs in a Web Worker.
+- Lazy-load anything not needed for the first interaction.
+- The engine's thinking time is capped per level (see `LEVELS` in `src/store/types.ts`). Don't add uncapped searches.
 
 ### Styling
 
-- **Tailwind CSS** with semantic class names
-- Use design tokens from `globals.css`
-- Dark mode first (light mode optional)
-- No heavy animations — subtle transitions only
-- System fonts preferred
+- Use **Tailwind CSS** with the design tokens in `src/styles/globals.css`.
+- Dark mode first.
+- Only use classes that exist. Animation helpers like `animate-in` need a plugin ([#113](https://github.com/youneedgreg/chessy/issues/113)).
+- Keep animations subtle and respect `prefers-reduced-motion`.
 
 ```tsx
-// ✅ Good - semantic, uses tokens
-<div className="bg-bg-secondary text-text-primary rounded-lg p-4 
-                transition-opacity duration-150">
+// ✅ Good: semantic, uses tokens
+<div className="bg-bg-secondary text-foreground rounded-lg p-4 transition-opacity duration-150">
 
-// ❌ Bad - arbitrary values, hard-coded colors
+// ❌ Bad: arbitrary values, hard-coded colours
 <div className="bg-[#242424] text-[#e8e8e8] rounded-[8px] p-[16px]">
 ```
 
-### File Organization
-
-- One component per file
-- Co-locate tests with source files
-- Group related utilities in `/lib`
-- Keep `/logic` pure (no React dependencies)
+### File organisation
 
 ```
-/components
-  ChessBoard.tsx
-  ChessBoard.test.tsx
-  ChessBoard.module.css  # if needed
+src/app/          # routes (landing, play, review)
+src/components/   # React components
+src/engine/       # Stockfish service (Web Worker wrapper)
+src/hooks/        # React hooks (engine loop, keyboard shortcuts)
+src/logic/        # pure chess logic: grading, tactics, explanations, export (no React)
+src/store/        # Zustand store and level configuration
 ```
 
 ---
 
 ## What to Contribute
 
-### 🎯 High Priority
+### 🎯 High priority
 
-- Performance improvements
-- Bug fixes (especially engine or move classification bugs)
-- Better explanations for the principle library
-- Accessibility improvements
-- Mobile responsiveness
-- Cross-browser compatibility
-- Test coverage
+- **Training correctness:** grading, explanations, tactics (#107–#112).
+- **Bugs:** best-move arrows (#105), keyboard shortcuts (#116).
+- **Tests and CI** (#125, #130).
+- **Accessibility and mobile** (#139).
 
 ### ✅ Welcome
 
-- New tactical patterns for detection
-- Additional chess principles with clear explanations
-- UI polish that maintains minimalism
-- Documentation improvements
-- Puzzle extraction improvements
-- Endgame tablebase integration (future)
+- Opening content for the Beginner guided openings (#106).
+- New tactical patterns, with tests.
+- The frontend revamp (#133–#139).
+- Multiplayer (#140).
+- Documentation improvements.
 
-### 💡 Discuss First
+### 💡 Discuss first
 
 - New training levels
-- Major UI changes
 - New dependencies
 - Architecture changes
 - AI/ML features
@@ -254,181 +218,64 @@ export const FeedbackOverlay: React.FC<FeedbackProps> = memo(({
 
 ## What NOT to Contribute
 
-### ❌ Will Not Be Merged
+### ❌ Won't be merged
 
 - **User accounts or authentication**
-- **Social features** (chat, friends, profiles)
+- **Social features** (chat, friends lists, profiles, leaderboards)
 - **Gamification** (points, badges, streaks, XP)
-- **Ads or tracking** (analytics must be privacy-focused and opt-in)
+- **Ads or tracking** (any analytics must be privacy-focused and opt-in)
 - **Paywalls or subscriptions**
 - **Heavy animations or flashy effects**
-- **Tutorial modals or onboarding flows**
-- Features that slow down first interaction
-- Dependencies that significantly increase bundle size
-
-**Why?** These violate the core philosophy: fast, focused, friction-free learning.
-
----
-
-## Submitting Changes
-
-### Pull Request Checklist
-
-Before submitting, ensure:
-
-- [ ] Code follows TypeScript and React standards
-- [ ] All tests pass (`npm test`)
-- [ ] No linting errors (`npm run lint`)
-- [ ] Tested in all 4 training levels
-- [ ] Mobile responsive (if UI change)
-- [ ] Performance verified (no regressions)
-- [ ] Documentation updated (if needed)
-- [ ] Commit messages are clear
-- [ ] PR description explains the change
-
-### PR Template
-
-```markdown
-## Description
-Brief description of changes
-
-## Related Issue
-Fixes #123
-
-## Changes Made
-- Change 1
-- Change 2
-
-## Testing Done
-- Tested in Beginner/Intermediate/Advanced/Professional modes
-- Performance verified: [specific metrics]
-- Cross-browser tested: Chrome, Firefox, Safari
-
-## Screenshots (if UI change)
-[Add screenshots or recordings]
-
-## Checklist
-- [ ] Tests pass
-- [ ] No linting errors
-- [ ] All levels tested
-- [ ] Performance verified
-```
+- Features that slow down the first interaction
+- Dependencies that significantly increase bundle size without a clear payoff
 
 ---
 
 ## Architecture Guidelines
 
-### State Management
+### State management
 
-- Use **Zustand** for global state
-- Keep state minimal and normalized
-- Actions should be synchronous when possible
-- Engine evaluations run async in Web Worker
+- **Zustand** holds the global game state (`src/store/gameStore.ts`).
+- The game is saved in the browser (zustand `persist`); the board is rebuilt from the move list on load.
+- Keep state minimal; derive what you can.
 
-### Engine Integration
+### Engine integration
 
-- All engine calls must be non-blocking
-- Use configurable depth based on training level
-- Cache positions when appropriate
-- Handle engine failures gracefully
+- `engineService` (`src/engine/evaluateMove.ts`) runs one search at a time; newer requests supersede older ones.
+- Scores are always from **White's point of view**.
+- `bestMove` is the strongest move (used for analysis). `engineMove` is the move the engine chooses to play at the current Skill Level.
+- Every search is capped by depth **and** time (`moveTimeMs`).
 
-### Explanation System
+### Level system
 
-The current system is **rule-based**:
-- Maps `(move, eval, tactics, position)` → explanation
-- Uses pre-written templates
-- Fast and deterministic
-- Easily testable
+Each level in `LEVELS` defines the engine settings and whether undo is allowed. Feedback rules per level live in `src/app/play/page.tsx`. Prefer config over scattered `if (level === …)` checks.
 
-Future AI integration should:
-- Be async and optional
-- Fall back to rule-based on failure
-- Never block gameplay
-- Be cacheable
+### Explanation system
 
-### Level System
-
-Each level has a configuration object defining:
-- Engine depth
-- Feedback timing
-- UI element visibility
-- Undo availability
-- Explanation behavior
-
-**Never hardcode level-specific logic** — use the config system.
-
-```typescript
-// ✅ Good
-const config = LEVEL_CONFIGS[currentLevel];
-if (config.showBestMove) {
-  // ...
-}
-
-// ❌ Bad
-if (currentLevel === 'beginner') {
-  // ...
-}
-```
+Rule-based and deterministic: it maps `(position, move, evaluation, tactics)` to a short explanation. Any future AI explanations must be optional, asynchronous, and fall back to the rule-based version.
 
 ---
 
-## Testing Requirements
+## Testing
 
-### Unit Tests
+Until the test runner lands (#125):
+- run `npm run lint`, `npm run type-check` and `npm run build`;
+- play the affected flow by hand at every level and as both colours.
 
-- All pure functions in `/logic` must have tests
-- Move classification edge cases
-- Principle detection accuracy
-- Tactical pattern matching
-
-### Integration Tests
-
-- Engine evaluation pipeline
-- State updates after moves
-- Level configuration behavior
-
-### Performance Tests
-
-- Engine evaluation time (<100ms)
-- Feedback render time (same frame)
-- Page load time (<1s)
-
-### Manual Testing
-
-Before submitting UI changes:
-1. Play through a full game at each level
-2. Verify feedback appears as expected
-3. Check mobile responsiveness
-4. Test on slower devices/networks
+Once #125 is in, every pure function in `src/logic` should have unit tests, especially grading edge cases (mate scores, both colours), tactics detection, and PGN export.
 
 ---
 
 ## Getting Help
 
-- **Questions?** Open a discussion on GitHub
-- **Bug?** Open an issue with reproduction steps
-- **Feature idea?** Discuss it in an issue first
-- **Unclear documentation?** Submit a PR to improve it
-
----
+- **Questions?** Ask on the issue you're working on, or open a discussion.
+- **Found a bug?** Open an issue with the bug template.
+- **Security problem?** See [SECURITY.md](./SECURITY.md). Please don't open a public issue.
 
 ## Recognition
 
-Contributors will be acknowledged in:
-- GitHub contributors list
-- Release notes for significant contributions
-- README acknowledgments section (for major features)
+Every contributor appears in the GitHub contributors list and in the README. Significant contributions are called out in the release notes.
 
 ---
 
-## Final Notes
-
-This project prioritizes **correctness over cleverness** and **speed over features**.
-
-Every line of code should serve the goal of helping players improve their chess thinking through honest, immediate, principle-based feedback.
-
-Thank you for helping build something that respects both the game and the player.
-
----
-
-**Questions?** Open an issue or discussion. We're here to help.
+This project prioritises **correctness over cleverness** and **speed over features**. Thanks for helping build something that respects both the game and the player.

@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an idea that fits Chessy's philosophy
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Chessy is fast, minimal chess training: **no accounts, no gamification, no social noise**. Ideas that fit that are very welcome. See [CONTRIBUTING.md](https://github.com/youneedgreg/chessy/blob/main/CONTRIBUTING.md) and the roadmap in #104.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Who is it for, and what's hard for them today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How should it work? Mock-ups and screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: philosophy
+    attributes:
+      label: Fits the philosophy
+      options:
+        - label: It doesn't add accounts, ads, tracking, points, badges or streaks
+          required: true
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd like to work on this myself

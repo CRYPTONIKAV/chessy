@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Roadmap and open work
+    url: https://github.com/youneedgreg/chessy/issues/104
+    about: The tracking issue lists everything planned, grouped by area.
+  - name: Good first issues
+    url: https://github.com/youneedgreg/chessy/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+    about: Small, well-defined tasks for a first contribution.
+  - name: Report a security vulnerability
+    url: https://github.com/youneedgreg/chessy/security/advisories/new
+    about: Please report security problems privately, not in a public issue.

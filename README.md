@@ -6,6 +6,7 @@
 
 No accounts. No ads. No streaks. Just you, the board, and honest feedback.
 
+[![Live demo](https://img.shields.io/badge/demo-chessymate.vercel.app-8b5cf6?logo=vercel&logoColor=white)](https://chessymate.vercel.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 [![Good first issues](https://img.shields.io/github/issues/youneedgreg/chessy/good%20first%20issue?label=good%20first%20issues&color=7057ff)](https://github.com/youneedgreg/chessy/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
@@ -18,7 +19,7 @@ No accounts. No ads. No streaks. Just you, the board, and honest feedback.
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-0f172a?logo=tailwindcss&logoColor=38bdf8)
 ![Stockfish](https://img.shields.io/badge/Engine-Stockfish_WASM-6b7280)
 
-[Getting started](#-getting-started) · [Features](#-features) · [Roadmap](#-roadmap) · [Contributing](#-contributing)
+**[▶ Play it now](https://chessymate.vercel.app/)** · [Getting started](#-getting-started) · [Features](#-features) · [Roadmap](#-roadmap) · [Contributing](#-contributing)
 
 <img src="docs/screenshots/play.png" alt="Playing against the engine on Intermediate, with the eval bar, move history and a move grade" width="860" />
 
@@ -82,7 +83,9 @@ A **Silent Mode** toggle hides all feedback on any level.
 
 ## 🚀 Getting started
 
-**Requirements:** Node.js 20+ and npm.
+**Just want to play?** Open **[chessymate.vercel.app](https://chessymate.vercel.app/)**. Nothing to install.
+
+**To run it locally:** you need Node.js 20+ and npm.
 
 ```bash
 git clone https://github.com/youneedgreg/chessy.git

@@ -15,7 +15,7 @@ export function generateJSON(store: GameStore): string {
 }
 
 export function generatePGN(store: GameStore): string {
-    const { history, result, orientation, difficulty } = store;
+    const { history, result, resultReason, orientation, difficulty } = store;
     const date = new Date().toISOString().split('T')[0].replace(/-/g, '.');
 
     let pgn = '';
@@ -28,17 +28,24 @@ export function generatePGN(store: GameStore): string {
     pgn += `[White "${orientation === 'white' ? 'Player' : `Engine (${difficulty})`}"]\n`;
     pgn += `[Black "${orientation === 'black' ? 'Player' : `Engine (${difficulty})`}"]\n`;
     pgn += `[Result "${result || '*'}"]\n`;
+    if (resultReason) {
+        pgn += `[Termination "${terminationText(resultReason, result)}"]\n`;
+    }
+    pgn += `[PlyCount "${history.length}"]\n`;
     pgn += `[Variant "Standard"]\n`;
     pgn += `\n`;
 
     // Moves
     let moveText = '';
     let moveNumber = 1;
+    let lastWasComment = false;
 
     history.forEach((move, index) => {
         if (index % 2 === 0) {
             moveText += `${moveNumber}. ${move.san}`;
             moveNumber++;
+        } else if (lastWasComment) {
+            moveText += ` ${moveNumber - 1}... ${move.san}`;
         } else {
             moveText += ` ${move.san}`;
         }
@@ -50,8 +57,8 @@ export function generatePGN(store: GameStore): string {
         // Comments (Eval + Explanation)
         const comments = [];
         if (move.evaluation) {
-            const evalText = move.evaluation.mate
-                ? `M${Math.abs(move.evaluation.mate)}`
+            const evalText = move.evaluation.mate != null
+                ? `#${move.evaluation.mate}`
                 : (move.evaluation.evaluation / 100).toFixed(2);
             comments.push(`[%eval ${evalText}]`);
         }
@@ -60,7 +67,8 @@ export function generatePGN(store: GameStore): string {
             comments.push(move.explanation.replace(/[\{\}]/g, ''));
         }
 
-        if (comments.length > 0) {
+        lastWasComment = comments.length > 0;
+        if (lastWasComment) {
             moveText += ` { ${comments.join(' ')} }`;
         }
 
@@ -80,19 +88,29 @@ export function generatePGN(store: GameStore): string {
     });
     if (currentLine) pgn += currentLine.trim();
 
-    // Result suffix
-    if (result) {
-        pgn += ` ${result}`;
-    }
+    // Result suffix, always present (even `*` for unfinished games).
+    pgn += ` ${result || '*'}`;
 
     return pgn;
+}
+
+function terminationText(reason: NonNullable<GameStore['resultReason']>, result: string | null): string {
+    const outcome = result === '1-0' ? 'White won' : result === '0-1' ? 'Black won' : 'Drawn';
+    switch (reason) {
+        case 'checkmate': return `${outcome} by checkmate`;
+        case 'stalemate': return `${outcome} by stalemate`;
+        case 'threefold repetition': return `${outcome} by threefold repetition`;
+        case 'insufficient material': return `${outcome} by insufficient material`;
+        case '50-move rule': return `${outcome} by fifty-move rule`;
+        case 'resignation': return `${outcome} by resignation`;
+        default: return outcome;
+    }
 }
 
 function getNAG(move: MoveHistory): string {
     if (!move.analysis) return '';
     switch (move.analysis.grade) {
         case 'brilliant': return '$3'; // !!
-        case 'good': return '$1'; // !
         case 'inaccuracy': return '$6'; // ?!
         case 'mistake': return '$2'; // ?
         case 'blunder': return '$4'; // ??

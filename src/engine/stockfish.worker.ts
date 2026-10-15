@@ -15,7 +15,6 @@ const initEngine = (stockfishJsUrl: string) => {
                     self.postMessage(line);
                 };
 
-                console.log('Stockfish Engine Initialized');
             }
         } catch (e) {
             console.error('Failed to initialize Stockfish:', e);

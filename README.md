@@ -159,6 +159,9 @@ Please follow the [Code of Conduct](./CODE_OF_CONDUCT.md). For security issues, 
 <a href="https://github.com/youneedgreg/chessy/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=youneedgreg/chessy" alt="Contributors" />
 </a>
+<a href="https://github.com/CRYPTONIKAV" title="CRYPTONIKAV">
+  <img src="https://avatars.githubusercontent.com/u/29835619?v=4&s=128" width="64" height="64" alt="CRYPTONIKAV" />
+</a>
 
 Thanks to [@shafqat-baloch786](https://github.com/shafqat-baloch786) for the Docker support (#88), and to [@CRYPTONIKAV](https://github.com/CRYPTONIKAV) for the lint cleanup (#144), dev-only debug logging (#145) and PGN export fixes (#146).
 

@@ -160,7 +160,7 @@ Please follow the [Code of Conduct](./CODE_OF_CONDUCT.md). For security issues, 
   <img src="https://contrib.rocks/image?repo=youneedgreg/chessy" alt="Contributors" />
 </a>
 
-Thanks to [@shafqat-baloch786](https://github.com/shafqat-baloch786) for the Docker support (#88).
+Thanks to [@shafqat-baloch786](https://github.com/shafqat-baloch786) for the Docker support (#88), and to [@CRYPTONIKAV](https://github.com/CRYPTONIKAV) for the lint cleanup (#144), dev-only debug logging (#145) and PGN export fixes (#146).
 
 ---
 

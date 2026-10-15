@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { debug } from '@/logic/debug';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Chess } from 'chess.js';
@@ -85,9 +86,9 @@ export const useGameStore = create<GameStore>()(persist((set, get) => ({
 
     // Actions
     makeMove: (source: string, target: string, promotion: string = 'q') => {
-        console.log('[gameStore.makeMove] Called with:', { source, target, promotion });
+        debug('[gameStore.makeMove] Called with:', { source, target, promotion });
         const { game, evaluation, history } = get();
-        console.log('[gameStore.makeMove] Current state:', {
+        debug('[gameStore.makeMove] Current state:', {
             currentFen: game.fen(),
             turn: game.turn(),
             historyLength: history.length
@@ -98,7 +99,7 @@ export const useGameStore = create<GameStore>()(persist((set, get) => ({
         // Rebuild from the full move list (not just the FEN) so chess.js can
         // detect threefold repetition
         const gameCopy = replay(history) ?? new Chess(game.fen());
-        console.log('[gameStore.makeMove] Created game copy with FEN:', gameCopy.fen());
+        debug('[gameStore.makeMove] Created game copy with FEN:', gameCopy.fen());
 
         try {
             const move = gameCopy.move({
@@ -106,7 +107,7 @@ export const useGameStore = create<GameStore>()(persist((set, get) => ({
                 to: target,
                 promotion: promotion,
             });
-            console.log('[gameStore.makeMove] Move result:', move);
+            debug('[gameStore.makeMove] Move result:', move);
 
             if (move) {
                 // Build new move history with richer data
@@ -131,7 +132,7 @@ export const useGameStore = create<GameStore>()(persist((set, get) => ({
                     evaluation: null, // Clear current eval until re-analysis
                 };
 
-                console.log('[gameStore.makeMove] Setting new state:', {
+                debug('[gameStore.makeMove] Setting new state:', {
                     newFen: newState.fen,
                     newTurn: newState.turn,
                     newHistoryLength: newState.history.length,
@@ -139,16 +140,16 @@ export const useGameStore = create<GameStore>()(persist((set, get) => ({
                 });
 
                 set(newState);
-                console.log('[gameStore.makeMove] State set successfully, returning true');
+                debug('[gameStore.makeMove] State set successfully, returning true');
                 return true;
             } else {
-                console.log('[gameStore.makeMove] Move was null/undefined - invalid move');
+                debug('[gameStore.makeMove] Move was null/undefined - invalid move');
             }
         } catch (e) {
             console.error('[gameStore.makeMove] Exception occurred:', e);
             return false;
         }
-        console.log('[gameStore.makeMove] Returning false');
+        debug('[gameStore.makeMove] Returning false');
         return false;
     },
 

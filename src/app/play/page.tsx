@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
 import { createBestMoveArrow, Arrow } from '@/logic/arrows';
+import { debug } from '@/logic/debug';
 import { Square } from 'chess.js';
 import { useGameStore, moverOf, useStoreHydrated } from '../../store/gameStore';
 import Link from 'next/link';
@@ -77,7 +78,7 @@ function PlayContent() {
     // Color selection UI state
     const [showColorSelection, setShowColorSelection] = useState(true);
 
-    console.log('[PlayPage Render] currentOpening:', currentOpening);
+    debug('[PlayPage Render] currentOpening:', currentOpening);
     useEffect(() => {
         if (mounted) {
             setShowColorSelection(history.length === 0);
@@ -176,9 +177,9 @@ function PlayContent() {
     useEffect(() => {
         if (history.length > 0) {
             const moves = history.map(h => h.san);
-            console.log('[Opening Detection] Moves:', moves);
+            debug('[Opening Detection] Moves:', moves);
             const opening = detectOpening(moves);
-            console.log('[Opening Detection] Detected:', opening);
+            debug('[Opening Detection] Detected:', opening);
             setCurrentOpening(opening);
         } else {
             setCurrentOpening(null);

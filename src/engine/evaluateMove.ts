@@ -34,7 +34,6 @@ class StockfishEngine {
     }
 
     private handleMessage(line: string) {
-        // console.log('Engine Output:', line);
 
         if (line === 'uciok') {
             this.isReady = true;

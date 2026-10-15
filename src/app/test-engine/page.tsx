@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { engineService } from '@/engine/evaluateMove';
+import { debug } from '@/logic/debug';
 import { EngineEvaluation } from '@/engine/types';
 
 export default function TestEnginePage() {
@@ -23,7 +24,7 @@ export default function TestEnginePage() {
             const startTime = performance.now();
             const result = await engineService.evaluate(fen, 15, multiPV);
             const endTime = performance.now();
-            console.log(`Evaluation took ${endTime - startTime}ms`);
+            debug(`Evaluation took ${endTime - startTime}ms`);
             setEvalResult(result);
         } catch (err) {
             setError('Failed to evaluate position');

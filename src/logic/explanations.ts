@@ -96,4 +96,3 @@ export function generateExplanation(
 
 // Example usage:
 // const explanation = generateExplanation(-120, ['pin'], game, { from: 'e2', to: 'e4', piece: 'p' });
-// console.log(explanation);

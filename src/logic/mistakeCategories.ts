@@ -1,5 +1,4 @@
 import { MoveHistory } from '@/store/types';
-import { Chess } from 'chess.js';
 
 export type MistakeCategory = 'tactical' | 'opening' | 'middlegame' | 'endgame';
 

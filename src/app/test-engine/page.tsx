@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { engineService } from '@/engine/evaluateMove';
 import { EngineEvaluation } from '@/engine/types';
 

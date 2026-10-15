@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored third-party bundle: ~2,600 findings hide the real ones.
+    "public/**",
   ]),
 ]);
 

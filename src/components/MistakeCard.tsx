@@ -103,7 +103,7 @@ export default function MistakeCard({ move, moveNumber }: MistakeCardProps) {
                         <div>
                             <h4 className="text-sm font-semibold text-gray-300 mb-2">Consequence</h4>
                             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-                                <p className="text-blue-200 text-sm italic">"{move.explanation}"</p>
+                                <p className="text-blue-200 text-sm italic">&ldquo;{move.explanation}&rdquo;</p>
                             </div>
                         </div>
                     )}

@@ -140,7 +140,7 @@ export default function ReviewPage() {
 
                                     {currentMove.explanation && (
                                         <div className="bg-blue-500/10 p-4 rounded-lg border-l-4 border-blue-500">
-                                            <p className="text-blue-100 italic">"{currentMove.explanation}"</p>
+                                            <p className="text-blue-100 italic">&ldquo;{currentMove.explanation}&rdquo;</p>
                                         </div>
                                     )}
                                 </div>

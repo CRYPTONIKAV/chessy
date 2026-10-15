@@ -1,7 +1,7 @@
 'use client';
-import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
 import { createBestMoveArrow, Arrow } from '@/logic/arrows';
-import { Chess, Square } from 'chess.js';
+import { Square } from 'chess.js';
 import { useGameStore, moverOf, useStoreHydrated } from '../../store/gameStore';
 import Link from 'next/link';
 import { useChessEngine } from '../../hooks/useChessEngine';
@@ -9,10 +9,10 @@ import { LEVELS, DifficultyLevel } from '../../store/types';
 import { getTacticalDescription } from '@/logic/tactics';
 import { detectOpening } from '@/logic/openings';
 import { describeResult } from '@/logic/result';
+import { generateExplanation, Explanation } from '@/logic/explanations';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 
-import styles from './play.module.css';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import ShortcutsModal, { ShortcutDef } from '@/components/ShortcutsModal';
 
@@ -216,16 +216,16 @@ function PlayContent() {
     let feedbackTactics: string[] = [];
 
     if ((difficulty === 'beginner' || difficulty === 'intermediate') && effectiveMoveAnalysis && game) {
-        let explanationObj: any = undefined;
+        let explanationObj: Explanation | undefined = undefined;
         try {
-            explanationObj = require('@/logic/explanations').generateExplanation(
+            explanationObj = generateExplanation(
                 effectiveMoveAnalysis.evalDelta || 0,
                 effectiveMoveAnalysis.tacticalFlags || [],
                 game,
                 {
-                    from: effectiveMoveAnalysis.playerMove.slice(0, 2) as any,
-                    to: effectiveMoveAnalysis.playerMove.slice(2, 4) as any,
-                    piece: game.get(effectiveMoveAnalysis.playerMove.slice(0, 2) as any)?.type || ''
+                    from: effectiveMoveAnalysis.playerMove.slice(0, 2) as Square,
+                    to: effectiveMoveAnalysis.playerMove.slice(2, 4) as Square,
+                    piece: game.get(effectiveMoveAnalysis.playerMove.slice(0, 2) as Square)?.type || ''
                 }
             );
         } catch (e) { console.error("Error generating explanation:", e); }

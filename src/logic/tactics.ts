@@ -83,7 +83,6 @@ export function detectPins(game: Chess): Square[] {
 
                 // Check if the piece can move - if it has very limited moves, might be pinned
                 const moves = game.moves({ square, verbose: true });
-                const testGame = new Chess(game.fen());
 
                 // Simple heuristic: if removing this piece would put king in check
                 // This is a simplified check
@@ -140,6 +139,7 @@ export function detectBackRankWeakness(game: Chess): boolean {
  * Main tactical pattern detection function
  */
 export function detectTactics(game: Chess, lastMove?: string): TacticalFlag[] {
+    void lastMove;
     const flags: TacticalFlag[] = [];
 
     // Detect hanging pieces

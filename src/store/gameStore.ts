@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Chess } from 'chess.js';
-import { GameStore, LEVELS, DifficultyLevel, GameState, MoveHistory, ResultReason } from './types';
+import { GameStore, DifficultyLevel, MoveHistory, ResultReason } from './types';
 
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 

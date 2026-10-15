@@ -108,7 +108,7 @@ const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
 
         {calm && (
           <div className="text-[10px] text-primary/60 mt-3 italic text-right border-t border-white/5 pt-2">
-            "Every move is a step towards mastery."
+            &ldquo;Every move is a step towards mastery.&rdquo;
           </div>
         )}
       </div>

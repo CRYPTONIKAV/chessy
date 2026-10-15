@@ -1,5 +1,4 @@
-import { EngineEvaluation, MoveAnalysis, TacticalFlag } from '../engine/types';
-import { Chess, Square, PieceSymbol, Color } from 'chess.js';
+import { MoveAnalysis, TacticalFlag } from '../engine/types';
 
 export const CLASSIFICATIONS = {
     BRILLIANT: 'brilliant',

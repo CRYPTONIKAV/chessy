@@ -6,7 +6,7 @@
  * keep using `console.warn` / `console.error` directly.
  */
 export function debug(...args: unknown[]): void {
-    if (process.env.NODE_ENV !== 'production') {
+    if (typeof process === 'undefined' || process.env.NODE_ENV !== 'production') {
         // eslint-disable-next-line no-console
         console.log(...args);
     }

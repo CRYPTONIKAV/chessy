@@ -35,6 +35,7 @@ export function createBestMoveArrow(from: string, to: string, level: string): Ar
 }
 
 export function createTacticalArrows(tactics: TacticalFlag[], move: { from: string; to: string }, level: string): Arrow[] {
+    void level;
     // Example: show a red arrow for pins, blue for forks, etc.
     const arrows: Arrow[] = [];
     for (const tactic of tactics) {

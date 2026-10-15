@@ -1,4 +1,4 @@
-import { Chess, Move } from 'chess.js';
+import { Chess } from 'chess.js';
 import { EngineEvaluation, MoveAnalysis, TacticalFlag } from '../engine/types';
 
 export type ResultReason =

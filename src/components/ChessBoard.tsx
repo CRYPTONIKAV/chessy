@@ -1,6 +1,6 @@
 'use client';
 
-import { Chessboard } from 'react-chessboard';
+import { Chessboard, PieceDropHandlerArgs } from 'react-chessboard';
 import { useState, useEffect, useRef } from 'react';
 
 import { Arrow } from '@/logic/arrows';
@@ -31,7 +31,7 @@ export default function ChessBoard({
     movableColor,
 }: ChessBoardComponentProps) {
     const wrapperRef = useRef<HTMLDivElement>(null);
-    const [boardSize, setBoardSize] = useState(300);
+    const [, setBoardSize] = useState(300);
 
     useEffect(() => {
         if (!wrapperRef.current) return;
@@ -54,7 +54,7 @@ export default function ChessBoard({
     }, []);
 
     // Wrap the onPieceDrop to match the library's expected signature
-    const handlePieceDrop = ({ piece, sourceSquare, targetSquare }: { piece: any; sourceSquare: string; targetSquare: string | null }) => {
+    const handlePieceDrop = ({ sourceSquare, targetSquare }: PieceDropHandlerArgs) => {
         if (!targetSquare || !onPieceDrop) return false;
         return onPieceDrop(sourceSquare, targetSquare);
     };
@@ -158,15 +158,6 @@ export default function ChessBoard({
                     };
                     const [x1, y1] = squareToCoords(arrow.from);
                     const [x2, y2] = squareToCoords(arrow.to);
-                    const dx = x2 - x1;
-                    const dy = y2 - y1;
-                    const len = Math.sqrt(dx * dx + dy * dy);
-                    const ux = dx / len;
-                    const uy = dy / len;
-                    // Arrowhead
-                    const arrowHeadSize = 0.25;
-                    const ax = x2 - ux * 0.3;
-                    const ay = y2 - uy * 0.3;
                     return (
                         <g key={idx}>
                             <line

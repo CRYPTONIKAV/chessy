@@ -1,5 +1,4 @@
 
-import { Chess, Square } from 'chess.js';
 
 export type PrincipleCategory = 'opening' | 'middlegame' | 'endgame' | 'tactical';
 

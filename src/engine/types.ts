@@ -37,5 +37,5 @@ export type MoveAnalysis = {
 
 export type UCIResponse = {
     type: 'ready' | 'eval' | 'bestmove' | 'info';
-    data: any;
+    data: unknown;
 };

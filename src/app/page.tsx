@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from 'react';
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
 import { LevelCard } from '@/components/LevelCard';
 
 type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'master';
@@ -70,7 +69,6 @@ const LEVELS: {
 
 export default function Home() {
   const [selectedLevel, setSelectedLevel] = useState<Difficulty>('intermediate');
-  const router = useRouter();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 relative overflow-hidden bg-background text-foreground selection:bg-primary/30">

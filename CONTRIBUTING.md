@@ -83,8 +83,9 @@ npm run dev          # http://localhost:3000
 | `npm run lint` | ESLint |
 | `npm run type-check` | TypeScript without emitting |
 | `npm run format` | Prettier |
+| `npm test` | Unit tests (Vitest) |
 
-> A test runner isn't set up yet. Adding one is [#125](https://github.com/youneedgreg/chessy/issues/125), a great first contribution.
+> The other core unit tests (`classifyMove`, store `undo`/`redo`/`resign`) are still [#125](https://github.com/youneedgreg/chessy/issues/125), a great first contribution.
 
 ---
 
@@ -114,6 +115,7 @@ Prefixes: `feat/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`.
 ### 4. Check locally
 
 ```bash
+npm test
 npm run lint
 npm run type-check
 npm run build
@@ -258,11 +260,13 @@ Rule-based and deterministic: it maps `(position, move, evaluation, tactics)` to
 
 ## Testing
 
-Until the test runner lands (#125):
-- run `npm run lint`, `npm run type-check` and `npm run build`;
-- play the affected flow by hand at every level and as both colours.
+Unit tests run with Vitest: `npm test`. Every pure function in `src/logic` should have
+unit tests, especially grading edge cases (mate scores, both colours), tactics detection,
+and PGN export. The remaining core suites (`classifyMove`, store `undo`/`redo`/`resign`)
+are tracked in [#125](https://github.com/youneedgreg/chessy/issues/125).
 
-Once #125 is in, every pure function in `src/logic` should have unit tests, especially grading edge cases (mate scores, both colours), tactics detection, and PGN export.
+Also run `npm run lint`, `npm run type-check` and `npm run build`, and play the affected
+flow by hand at every level and as both colours.
 
 ---
 

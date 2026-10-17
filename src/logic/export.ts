@@ -29,30 +29,33 @@ export function generatePGN(store: GameStore): string {
     pgn += `[Black "${orientation === 'black' ? 'Player' : `Engine (${difficulty})`}"]\n`;
     pgn += `[Result "${result || '*'}"]\n`;
     if (resultReason) {
-        pgn += `[Termination "${terminationText(resultReason, result)}"]\n`;
+        pgn += `[Termination "${TERMINATION_BY_REASON[resultReason]}"]\n`;
     }
     pgn += `[PlyCount "${history.length}"]\n`;
     pgn += `[Variant "Standard"]\n`;
     pgn += `\n`;
 
-    // Moves
-    let moveText = '';
+    // Moves. They are collected as tokens (a `{ … }` comment is one token) so
+    // wrapping can only break the text between tokens, never inside a comment
+    // or a `[%eval …]` command.
+    const tokens: string[] = [];
     let moveNumber = 1;
     let lastWasComment = false;
 
     history.forEach((move, index) => {
         if (index % 2 === 0) {
-            moveText += `${moveNumber}. ${move.san}`;
+            tokens.push(`${moveNumber}.`, move.san);
             moveNumber++;
         } else if (lastWasComment) {
-            moveText += ` ${moveNumber - 1}... ${move.san}`;
+            // A comment breaks the move text, so Black's move needs its number.
+            tokens.push(`${moveNumber - 1}...`, move.san);
         } else {
-            moveText += ` ${move.san}`;
+            tokens.push(move.san);
         }
 
         // Annotations
         const nag = getNAG(move);
-        if (nag) moveText += ` ${nag}`;
+        if (nag) tokens.push(nag);
 
         // Comments (Eval + Explanation)
         const comments = [];
@@ -69,24 +72,11 @@ export function generatePGN(store: GameStore): string {
 
         lastWasComment = comments.length > 0;
         if (lastWasComment) {
-            moveText += ` { ${comments.join(' ')} }`;
+            tokens.push(`{ ${comments.join(' ')} }`);
         }
-
-        moveText += ' ';
     });
 
-    // Formatting: break lines every 80 chars approximately
-    const words = moveText.split(' ');
-    let currentLine = '';
-
-    words.forEach(word => {
-        if (currentLine.length + word.length > 80) {
-            pgn += currentLine.trim() + '\n';
-            currentLine = '';
-        }
-        currentLine += word + ' ';
-    });
-    if (currentLine) pgn += currentLine.trim();
+    pgn += wrapTokens(tokens, 80);
 
     // Result suffix, always present (even `*` for unfinished games).
     pgn += ` ${result || '*'}`;
@@ -94,18 +84,35 @@ export function generatePGN(store: GameStore): string {
     return pgn;
 }
 
-function terminationText(reason: NonNullable<GameStore['resultReason']>, result: string | null): string {
-    const outcome = result === '1-0' ? 'White won' : result === '0-1' ? 'Black won' : 'Drawn';
-    switch (reason) {
-        case 'checkmate': return `${outcome} by checkmate`;
-        case 'stalemate': return `${outcome} by stalemate`;
-        case 'threefold repetition': return `${outcome} by threefold repetition`;
-        case 'insufficient material': return `${outcome} by insufficient material`;
-        case '50-move rule': return `${outcome} by fifty-move rule`;
-        case 'resignation': return `${outcome} by resignation`;
-        default: return outcome;
-    }
+/** Join tokens into lines of at most `width` characters, breaking between tokens. */
+function wrapTokens(tokens: string[], width: number): string {
+    const lines: string[] = [];
+    let currentLine = '';
+
+    tokens.forEach(token => {
+        if (currentLine && currentLine.length + 1 + token.length > width) {
+            lines.push(currentLine);
+            currentLine = token;
+            return;
+        }
+        currentLine = currentLine ? `${currentLine} ${token}` : token;
+    });
+    if (currentLine) lines.push(currentLine);
+
+    return lines.join('\n');
 }
+
+// PGN section 9.8.1 fixes the Termination values. Every reason Chessy records
+// ends the game by chess means, so all of them are "normal"; the descriptive
+// reason stays in the UI. Exhaustive record: a new ResultReason must decide.
+const TERMINATION_BY_REASON: Record<NonNullable<GameStore['resultReason']>, string> = {
+    'checkmate': 'normal',
+    'stalemate': 'normal',
+    'threefold repetition': 'normal',
+    'insufficient material': 'normal',
+    '50-move rule': 'normal',
+    'resignation': 'normal',
+};
 
 function getNAG(move: MoveHistory): string {
     if (!move.analysis) return '';
